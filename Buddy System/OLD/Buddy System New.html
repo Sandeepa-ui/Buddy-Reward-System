@@ -1,0 +1,2861 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Buddy Reward System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+:root{
+  --bg:#F2F5FC; --surface:#FFFFFF; --ink:#1A2450; --muted:#5A678F;
+  --royal:#1E3FBE; --royal-deep:#10226B; --royal-soft:#E4E9FC;
+  --yellow:#E8AE00; --yellow-soft:#FFF3C9; --yellow-ink:#8A6A00; --yellow-bright:#FFD34D;
+  --line:#DDE2F1; --line-soft:#EDF0FA;
+  --danger:#B23A2E; --danger-soft:#F9E5E1;
+  --ok:#1E3FBE; --ok-soft:#E4E9FC;
+  --cyan:#0096C7; --violet:#6B4E9B; --pink:#C2447E;
+  --radius:14px;
+  --shadow:0 1px 2px rgba(26,36,80,.05),0 10px 28px rgba(26,36,80,.08);
+  --fd:'Fraunces',serif; --fb:'Instrument Sans',sans-serif;
+}
+/* glow pass — a colorful, animated glow across the UI.
+   Set "glow off" in Settings to switch it off. */
+html.glow-on{
+  --glow-royal:0 0 14px rgba(30,63,190,.35),0 0 30px rgba(30,63,190,.16);
+  --glow-yellow:0 0 14px rgba(232,174,0,.4),0 0 30px rgba(255,211,77,.2);
+  --glow-soft:0 4px 22px rgba(30,63,190,.1),0 0 26px rgba(232,174,0,.08);
+  --glow-line:0 0 12px rgba(30,63,190,.22),0 0 26px rgba(232,174,0,.1);
+  --glow-danger:0 0 12px rgba(178,58,46,.3),0 0 24px rgba(178,58,46,.12);
+  --glow-cyan:0 0 12px rgba(0,150,199,.35),0 0 26px rgba(0,150,199,.14);
+  --glow-violet:0 0 12px rgba(107,78,155,.35),0 0 26px rgba(107,78,155,.14);
+  --glow-pink:0 0 12px rgba(194,68,126,.35),0 0 26px rgba(194,68,126,.14);
+  --anim-glow:glowPulse 3.2s ease-in-out infinite;
+}
+html:not(.glow-on){
+  --glow-royal:none;--glow-yellow:none;--glow-soft:none;--glow-line:none;
+  --glow-danger:none;--glow-cyan:none;--glow-violet:none;--glow-pink:none;
+  --anim-glow:none;
+}
+@keyframes glowPulse{
+  0%,100%{box-shadow:var(--glow-royal)}
+  50%{box-shadow:var(--glow-royal),0 0 34px rgba(232,174,0,.28),0 0 60px rgba(30,63,190,.12)}
+}
+/* rainbow glow sweep for primary buttons */
+@keyframes rainbowGlow{
+  0%{box-shadow:0 0 10px rgba(30,63,190,.5),0 0 22px rgba(0,150,199,.25)}
+  25%{box-shadow:0 0 12px rgba(0,150,199,.5),0 0 24px rgba(46,158,107,.25)}
+  50%{box-shadow:0 0 12px rgba(232,174,0,.55),0 0 26px rgba(255,211,77,.3)}
+  75%{box-shadow:0 0 12px rgba(194,68,126,.45),0 0 24px rgba(107,78,155,.25)}
+  100%{box-shadow:0 0 10px rgba(30,63,190,.5),0 0 22px rgba(0,150,199,.25)}
+}
+@keyframes rainbowBorder{
+  0%{border-color:#5A7BEA}
+  25%{border-color:#2E9E6B}
+  50%{border-color:#E8AE00}
+  75%{border-color:#C2447E}
+  100%{border-color:#5A7BEA}
+}
+@keyframes floatY{
+  0%,100%{transform:translateY(0)}
+  50%{transform:translateY(-9px)}
+}
+@keyframes haloSpin{to{transform:rotate(360deg)}}
+@keyframes haloPulse{
+  0%,100%{opacity:.85;filter:blur(16px) saturate(1.2)}
+  50%{opacity:1;filter:blur(22px) saturate(1.5)}
+}
+@keyframes dashMove{to{stroke-dashoffset:-200}}
+@keyframes slideLeft{from{opacity:0;transform:translateX(-14px)}to{opacity:1;transform:none}}
+
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--ink);font:15px/1.55 var(--fb);-webkit-font-smoothing:antialiased}
+.hidden{display:none!important}
+button{font-family:var(--fb)}
+::selection{background:var(--yellow-soft)}
+h1,h2,h3{font-family:var(--fd);font-weight:600;line-height:1.15}
+/* Organization name: first letter capital only (no forced uppercase) */
+.org-cap{letter-spacing:.02em}
+
+/* ===== LOGIN ===== */
+#loginScreen{min-height:100vh;display:grid;grid-template-columns:1.1fr 1fr}
+.lg-left{background:var(--royal-deep);color:#EEF1FE;padding:56px;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden}
+.lg-left::after{content:"";position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.06) 1px,transparent 1px);background-size:26px 26px;pointer-events:none}
+.lg-brand{display:flex;align-items:center;gap:14px;font-family:var(--fd);font-size:21px;font-weight:600}
+.lg-brand .logo-slot{width:56px;height:56px;border-radius:14px;overflow:hidden;flex:none;display:flex;align-items:center;justify-content:center;background:#FFFFFF;box-shadow:0 6px 18px rgba(0,0,0,.35),0 0 0 3px rgba(255,211,77,.35),var(--glow-yellow);animation:var(--anim-glow)}
+.lg-brand .logo-slot img{width:100%;height:100%;object-fit:cover}
+.lg-hero{position:relative;z-index:1}
+.lg-hero h1{font-size:clamp(34px,3.4vw,52px);font-weight:600;letter-spacing:-.01em;margin:26px 0 18px}
+.lg-hero h1 em{font-style:italic;color:var(--yellow-bright)}
+.lg-hero p{color:#B9C4E8;max-width:46ch;font-size:16px}
+.lg-points{display:flex;flex-direction:column;gap:14px;margin-top:38px;position:relative;z-index:1}
+.lg-points div{display:flex;gap:12px;align-items:center;color:#D5DCF5;font-size:14px;padding:8px 12px;border-radius:10px;background:rgba(255,255,255,.05);border-left:2px solid var(--yellow);transition:.25s}
+.lg-points div:nth-child(2){border-left-color:var(--cyan)}
+.lg-points div:nth-child(3){border-left-color:var(--pink)}
+.lg-points div:hover{background:rgba(255,255,255,.1);transform:translateX(5px)}
+.lg-points i{width:18px;height:18px;color:var(--yellow-bright);flex:none}
+.lg-points div:nth-child(2) i{color:var(--cyan)}
+.lg-points div:nth-child(3) i{color:#F08DB8}
+.lg-seal{position:absolute;right:-70px;bottom:-70px;opacity:.5;z-index:0}
+.lg-right{display:flex;align-items:center;justify-content:center;padding:48px 32px;background:var(--bg)}
+.lg-card{width:100%;max-width:400px}
+.card-logo{width:76px;height:76px;border-radius:50%;overflow:hidden;margin:0 auto 16px;display:flex;align-items:center;justify-content:center;border:3px solid var(--royal-soft);background:#fff;box-shadow:var(--shadow),var(--glow-royal)}
+.card-logo img{width:100%;height:100%;object-fit:cover}
+.card-logo svg{width:64px;height:64px}
+.lg-card h2{font-size:30px;margin-bottom:6px;text-align:center}
+.lg-card>p{color:var(--muted);margin-bottom:28px;text-align:center}
+.field{margin-bottom:16px}
+.field label{display:block;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:7px}
+.pw-wrap{position:relative}
+.pw-wrap .icon-btn{position:absolute;right:6px;top:50%;transform:translateY(-50%)}
+.lg-err{background:var(--danger-soft);color:var(--danger);border:1px solid #EFC5BD;border-radius:10px;padding:10px 14px;font-size:13.5px;margin-bottom:16px;display:flex;gap:8px;align-items:center}
+.lg-err i{width:16px;height:16px;flex:none}
+.shake{animation:shake .4s}
+@keyframes shake{20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
+.lg-demo{margin-top:26px;border-top:1px dashed var(--line);padding-top:18px}
+.lg-demo p{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:10px}
+.lg-chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 13px;font-size:13px;font-weight:600;cursor:pointer;color:var(--ink);transition:.15s}
+.chip:hover{border-color:var(--royal);color:var(--royal);box-shadow:var(--glow-royal)}
+.chip small{font-weight:500;color:var(--muted);margin-left:5px}
+
+/* ===== SHELL ===== */
+#app{display:grid;grid-template-columns:256px 1fr;min-height:100vh}
+#sidebar{background:var(--royal-deep);color:#C2CBEE;padding:22px 14px;position:sticky;top:0;height:100vh;overflow-y:auto;display:flex;flex-direction:column}
+.sb-brand{display:flex;align-items:center;gap:11px;padding:4px 10px 20px;border-bottom:1px solid rgba(255,255,255,.14);margin-bottom:16px}
+.sb-brand .logo-slot{width:36px;height:36px;border-radius:9px;overflow:hidden;flex:none;display:flex;align-items:center;justify-content:center;box-shadow:var(--glow-yellow)}
+.sb-brand .logo-slot img{width:100%;height:100%;object-fit:cover}
+.sb-brand b{font-family:var(--fd);font-size:16.5px;color:#F2F4FE;font-weight:600;line-height:1.2;display:block}
+.sb-brand small{font-size:11px;letter-spacing:.03em;color:#8FA0E0}
+.sb-group{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:#7E90D6;padding:16px 12px 7px}
+/* glowing sidebar tabs — staggered entrance + colorful glow on hover/active */
+.sb-item{display:flex;align-items:center;gap:11px;padding:8px 12px;border-radius:9px;cursor:pointer;font-size:13.5px;font-weight:500;color:#C2CBEE;border-left:2px solid transparent;transition:.25s;margin:1px 0;animation:slideLeft .4s ease backwards}
+.sb-item:nth-child(1){animation-delay:.03s}.sb-item:nth-child(2){animation-delay:.06s}
+.sb-item:nth-child(3){animation-delay:.09s}.sb-item:nth-child(4){animation-delay:.12s}
+.sb-item:nth-child(5){animation-delay:.15s}.sb-item:nth-child(6){animation-delay:.18s}
+.sb-item:nth-child(7){animation-delay:.21s}
+.sb-item i{width:17px;height:17px;flex:none;opacity:.85;transition:.25s}
+.sb-item:hover{background:rgba(255,255,255,.09);color:#F2F4FE;transform:translateX(4px)}
+.sb-item:hover i{filter:drop-shadow(0 0 6px rgba(255,211,77,.9))}
+.sb-item.active{background:rgba(255,255,255,.13);color:var(--yellow-soft);border-left-color:var(--yellow);box-shadow:inset 0 0 18px rgba(232,174,0,.14),0 0 16px rgba(232,174,0,.22)}
+.sb-item.active i{color:var(--yellow-bright);filter:drop-shadow(0 0 7px rgba(255,211,77,.95))}
+/* each group gets its own glow accent color */
+.sb-group:nth-of-type(1)~.sb-item:hover{border-left-color:var(--cyan)}
+.sb-foot{margin-top:auto;padding:14px 10px 4px;border-top:1px solid rgba(255,255,255,.14);font-size:11px;color:#7E90D6}
+main{min-width:0}
+.topbar{height:64px;background:var(--surface);border-bottom:1px solid var(--line);box-shadow:var(--glow-line);display:flex;align-items:center;gap:16px;padding:0 26px;position:sticky;top:0;z-index:40}
+.tb-burger{display:none}
+.tb-title h2{font-size:19px;font-weight:600}
+.tb-title small{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.tb-right{margin-left:auto;display:flex;align-items:center;gap:14px}
+.tb-date{font-size:13px;color:var(--muted)}
+.tb-clock{display:inline-flex;align-items:center;gap:7px;font-weight:700;font-size:13.5px;color:var(--royal);background:var(--royal-soft);padding:5px 12px;border-radius:999px;font-variant-numeric:tabular-nums;box-shadow:var(--glow-royal)}
+.tb-clock i{width:14px;height:14px}
+.tb-user{display:flex;align-items:center;gap:10px;padding:5px 12px 5px 6px;border:1px solid var(--line);border-radius:999px;background:#fff;box-shadow:var(--glow-soft)}
+.tb-user b{font-size:13px;font-weight:600;display:block;line-height:1.15}
+.tb-user small{font-size:11px;color:var(--muted)}
+.pages{padding:28px;max-width:1240px;margin:0 auto}
+.page{animation:pageIn .35s ease}
+@keyframes pageIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* ===== COMPONENTS ===== */
+/* glowing panels */
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow),var(--glow-soft);transition:box-shadow .3s,transform .3s}
+.panel:hover{box-shadow:var(--shadow),var(--glow-line)}
+.panel-h{display:flex;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid var(--line-soft);flex-wrap:wrap}
+.panel-h h3{font-size:16.5px}
+.panel-h .sub{font-size:12.5px;color:var(--muted)}
+.panel-b{padding:20px}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:9px 16px;border-radius:10px;border:1px solid transparent;background:var(--royal);color:#F5F7FF;font:600 13.5px var(--fb);cursor:pointer;transition:.2s;white-space:nowrap}
+html.glow-on .btn:not(.ghost):not(.danger){animation:rainbowGlow 4.5s linear infinite}
+.btn:hover{background:var(--royal-deep);transform:translateY(-1px)}
+.btn:active{transform:translateY(1px)}
+.btn i{width:15px;height:15px}
+.btn.brass{background:var(--yellow);color:var(--royal-deep)}
+.btn.brass:hover{background:#D19A00}
+.btn.ghost{background:transparent;border-color:var(--line);color:var(--ink)}
+.btn.ghost:hover{border-color:var(--royal);color:var(--royal);background:transparent;box-shadow:var(--glow-royal);animation:none}
+.btn.danger{background:transparent;border-color:#E8C0B8;color:var(--danger)}
+html.glow-on .btn.danger{animation:none;box-shadow:var(--glow-danger)}
+.btn.danger:hover{background:var(--danger-soft)}
+.btn.sm{padding:6px 11px;font-size:12.5px;border-radius:8px}
+.icon-btn{width:32px;height:32px;border-radius:9px;border:1px solid transparent;background:transparent;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);transition:.15s;flex:none}
+.icon-btn:hover{background:var(--royal-soft);color:var(--royal);box-shadow:var(--glow-royal)}
+.icon-btn i{width:16px;height:16px}
+.inp,select.inp,textarea.inp{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:#fff;font:14px var(--fb);color:var(--ink);outline:none;transition:.2s}
+.inp:focus{border-color:var(--royal);box-shadow:0 0 0 3px rgba(30,63,190,.12),var(--glow-royal)}
+.inp[readonly]{background:#F5F7FE;color:var(--muted)}
+textarea.inp{resize:vertical;min-height:80px}
+select.inp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%235A678F' stroke-width='2.4'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 11px center;padding-right:34px}
+.lbl{display:block;font-size:11.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+/* glowing colorful badges */
+.badge{display:inline-flex;align-items:center;gap:5px;padding:2.5px 10px;border-radius:999px;font-size:11.5px;font-weight:600;letter-spacing:.02em;white-space:nowrap}
+.b-ok{background:var(--ok-soft);color:var(--ok);box-shadow:var(--glow-royal)}
+.b-warn{background:var(--yellow-soft);color:var(--yellow-ink);box-shadow:var(--glow-yellow)}
+.b-bad{background:var(--danger-soft);color:var(--danger);box-shadow:var(--glow-danger)}
+.b-mute{background:#EAEef8;color:var(--muted)}
+.b-steel{background:#E3E9FA;color:#34509E;box-shadow:var(--glow-soft)}
+.b-buddy{background:var(--yellow-soft);color:var(--yellow-ink);box-shadow:var(--glow-yellow)}
+.av{display:inline-flex;align-items:center;justify-content:center;border-radius:50%;color:#F6F7FF;font-weight:700;letter-spacing:.02em;flex:none;box-shadow:var(--glow-soft)}
+.tbl{width:100%;border-collapse:collapse}
+.tbl th{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);text-align:left;padding:11px 16px;border-bottom:1px solid var(--line);font-weight:600;background:#F7F9FF}
+.tbl th:first-child{border-radius:10px 0 0 0}.tbl th:last-child{border-radius:0 10px 0 0}
+.tbl td{padding:12px 16px;border-bottom:1px solid var(--line-soft);font-size:14px;vertical-align:middle}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tbody tr{transition:.15s;border-left:2px solid transparent}
+.tbl tbody tr:hover{background:#F5F7FE;border-left-color:var(--yellow);box-shadow:inset 4px 0 12px rgba(232,174,0,.12)}
+.tbl .t-strong{font-weight:600}
+.tbl .t-dim{color:var(--muted);font-size:13px}
+.tbl-wrap{overflow-x:auto;border-radius:12px}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:18px}
+.toolbar .inp{width:auto;min-width:180px}
+.toolbar .spacer{flex:1}
+.page-head{display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:22px}
+.page-head h2{font-size:26px}
+.page-head p{color:var(--muted);font-size:14px;margin-top:3px}
+.page-head .spacer{flex:1}
+.empty{padding:44px 20px;text-align:center;color:var(--muted)}
+.empty i{width:30px;height:30px;margin-bottom:10px;opacity:.6}
+.note{display:flex;gap:10px;align-items:flex-start;background:var(--royal-soft);border:1px solid #C9D3F4;border-radius:11px;padding:12px 15px;font-size:13.5px;color:#2A3878;margin-bottom:18px;box-shadow:var(--glow-soft)}
+.note i{width:16px;height:16px;flex:none;margin-top:2px;color:var(--royal)}
+.note.warn{background:var(--yellow-soft);border-color:#F0DC9A;color:#6B5600;box-shadow:var(--glow-yellow)}
+.note.warn i{color:var(--yellow-ink)}
+.err-card{border:1px solid #EFC5BD;background:#FDF3F1}
+.err-card code{display:block;white-space:pre-wrap;font-size:12.5px;color:var(--danger);background:#fff;border:1px dashed #EFC5BD;border-radius:8px;padding:10px 12px;margin-top:10px;font-family:ui-monospace,monospace}
+
+/* stat strip — glowing colorful tiles */
+.stat-strip{display:flex;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;flex-wrap:wrap}
+.stat-strip>div{flex:1;padding:20px 24px;border-left:1px solid var(--line-soft);min-width:150px;position:relative;transition:.25s}
+.stat-strip>div:first-child{border-left:none}
+.stat-strip>div::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--royal);opacity:.85;transition:.25s}
+.stat-strip>div:nth-child(2)::before{background:var(--cyan)}
+.stat-strip>div:nth-child(3)::before{background:var(--yellow)}
+.stat-strip>div:nth-child(4)::before{background:var(--pink)}
+.stat-strip>div:nth-child(5)::before{background:var(--violet)}
+.stat-strip>div:nth-child(6)::before{background:var(--ok)}
+html.glow-on .stat-strip>div:hover{background:#FBFCFF;box-shadow:inset 0 0 24px rgba(30,63,190,.06)}
+html.glow-on .stat-strip>div:hover::before{box-shadow:0 0 12px currentColor}
+.stat-strip b{font-family:var(--fd);font-size:30px;font-weight:600;display:block;line-height:1.1}
+.stat-strip span{font-size:12px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
+
+/* home */
+.welcome-hero{background:var(--royal-deep);color:#EEF1FE;border-radius:20px;padding:46px 48px;display:flex;align-items:center;gap:30px;position:relative;overflow:hidden;margin-bottom:26px;box-shadow:var(--glow-royal)}
+.welcome-hero::before{content:"";position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.07) 1px,transparent 1px);background-size:24px 24px}
+/* animated rainbow aurora behind the hero */
+html.glow-on .welcome-hero::after{content:"";position:absolute;inset:-40%;background:conic-gradient(from 0deg,rgba(30,63,190,.35),rgba(0,150,199,.3),rgba(46,158,107,.28),rgba(232,174,0,.3),rgba(194,68,126,.3),rgba(107,78,155,.32),rgba(30,63,190,.35));animation:haloSpin 16s linear infinite;filter:blur(70px);opacity:.5;pointer-events:none}
+.welcome-hero>div{position:relative;z-index:1;flex:1}
+.welcome-hero .kick{font-size:11.5px;letter-spacing:.16em;font-weight:600;color:var(--yellow-bright)}
+.welcome-hero h1{font-size:clamp(30px,3.2vw,44px);margin:12px 0 14px;letter-spacing:-.01em}
+.welcome-hero p{color:#B9C4E8;max-width:54ch;margin-bottom:24px}
+.welcome-hero .seal-wrap{position:relative;z-index:1;flex:none}
+/* ===== ANIMATED HOME HERO LOGO =====
+   rotating conic-gradient halo ring + gentle float + glow pulse */
+.seal-wrap{position:relative;display:inline-block;width:230px;height:230px}
+.seal-wrap .halo{position:absolute;inset:-14px;border-radius:50%;background:conic-gradient(from 0deg,#1E3FBE,#0096C7,#2E9E6B,#E8AE00,#FF7A59,#C2447E,#6B4E9B,#1E3FBE);animation:haloSpin 8s linear infinite,haloPulse 3.4s ease-in-out infinite;z-index:0}
+.seal-wrap .hero-logo{position:absolute;inset:10px;width:auto;height:auto;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#FFFFFF;border:6px solid rgba(255,255,255,.9);box-shadow:0 22px 55px rgba(0,0,0,.45),0 0 40px rgba(255,211,77,.25);animation:floatY 5s ease-in-out infinite;z-index:1}
+.seal-wrap .hero-logo img{width:100%;height:100%;object-fit:cover}
+.seal-wrap .rosette{position:absolute;inset:10px;margin:auto;z-index:1;animation:floatY 5s ease-in-out infinite}
+.seal-wrap svg{position:absolute;inset:0;margin:auto;z-index:1;animation:floatY 5s ease-in-out infinite}
+/* live clock on the home hero */
+.hero-clock{position:relative;z-index:2;display:inline-flex;align-items:center;gap:10px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.22);border-radius:14px;padding:10px 18px;backdrop-filter:blur(6px);margin-bottom:22px;box-shadow:var(--glow-cyan)}
+.hero-clock i{width:17px;height:17px;color:var(--yellow-bright);animation:none}
+.hero-clock b{font-size:22px;font-family:var(--fd);letter-spacing:.04em;font-variant-numeric:tabular-nums;color:#FFF}
+.hero-clock small{font-size:12px;color:#B9C4E8;text-transform:uppercase;letter-spacing:.1em;display:block;line-height:1.2}
+html.glow-on .hero-clock{animation:glowPulse 3.2s ease-in-out infinite}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:0;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow),var(--glow-soft);margin-bottom:26px;overflow:hidden}
+.steps>div{padding:26px 26px 28px;border-left:1px solid var(--line-soft);position:relative;transition:.25s}
+.steps>div:first-child{border-left:none}
+.steps>div::after{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--royal);opacity:.8}
+.steps>div:nth-child(2)::after{background:var(--yellow)}
+.steps>div:nth-child(3)::after{background:var(--cyan)}
+html.glow-on .steps>div:hover{background:#FBFCFF;box-shadow:inset 0 0 30px rgba(30,63,190,.05)}
+.steps .num{font-family:var(--fd);font-size:38px;font-weight:600;color:var(--yellow);line-height:1}
+.steps h4{font-family:var(--fd);font-size:17px;margin:12px 0 6px}
+.steps p{font-size:13.5px;color:var(--muted)}
+.tl{list-style:none}
+.tl li{display:flex;gap:14px;align-items:flex-start;padding:13px 4px;border-bottom:1px solid var(--line-soft)}
+.tl li:last-child{border-bottom:none}
+.tl .dot{width:9px;height:9px;border-radius:50%;background:var(--yellow);margin-top:7px;flex:none;box-shadow:0 0 8px rgba(232,174,0,.7)}
+.tl b{font-weight:600}
+.tl time{margin-left:auto;font-size:12.5px;color:var(--muted);white-space:nowrap}
+
+/* dashboard */
+.grid-dash{display:grid;grid-template-columns:repeat(12,1fr);gap:18px}
+.g8{grid-column:span 8}.g7{grid-column:span 7}.g5{grid-column:span 5}.g4{grid-column:span 4}.g3{grid-column:span 3}.g12{grid-column:span 12}
+.rank{list-style:none}
+.rank li{display:flex;align-items:center;gap:12px;padding:11px 2px;border-bottom:1px solid var(--line-soft)}
+.rank li:last-child{border-bottom:none}
+.rank .pos{font-family:var(--fd);font-weight:600;font-size:17px;color:var(--muted);width:22px}
+.rank .pts{margin-left:auto;font-weight:700;color:var(--yellow-ink);font-size:14px}
+.mini-list{list-style:none}
+.mini-list li{display:flex;gap:12px;align-items:center;padding:11px 2px;border-bottom:1px solid var(--line-soft);font-size:13.5px}
+.mini-list li:last-child{border-bottom:none}
+.mini-list .pts{margin-left:auto;font-weight:700;color:var(--royal);white-space:nowrap}
+.meter{margin-bottom:14px}
+.meter .m-top{display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px}
+.meter .m-top b{font-weight:600}
+.m-bar{height:8px;background:#E7EBF7;border-radius:99px;overflow:hidden}
+.m-bar span{display:block;height:100%;background:var(--royal);border-radius:99px;transition:width .6s ease;box-shadow:0 0 8px rgba(30,63,190,.55)}
+.m-bar span.brass{background:var(--yellow);box-shadow:0 0 8px rgba(232,174,0,.6)}
+.chart-svg{width:100%;height:auto;display:block;filter:drop-shadow(0 0 6px rgba(30,63,190,.12))}
+.legend{list-style:none;font-size:13px}
+.legend li{display:flex;align-items:center;gap:9px;padding:6px 0}
+.legend .sw{width:11px;height:11px;border-radius:3px;flex:none;box-shadow:0 0 6px rgba(26,36,80,.25)}
+.legend b{margin-left:auto;font-weight:600}
+.donut-wrap{display:flex;align-items:center;gap:24px;flex-wrap:wrap}
+
+/* buddies */
+.pair{display:flex;align-items:center;gap:18px;padding:18px 20px;border-bottom:1px solid var(--line-soft);flex-wrap:wrap;transition:.2s}
+.pair:hover{background:#FBFCFF;box-shadow:inset 0 0 24px rgba(30,63,190,.05)}
+.pair:last-child{border-bottom:none}
+.pair .who{min-width:190px}
+.pair .who b{display:block;font-weight:600}
+.pair .who small{color:var(--muted);font-size:12.5px}
+.pair .link{display:flex;flex-direction:column;align-items:center;color:var(--yellow);flex:none}
+.pair .link i{width:20px;height:20px;filter:drop-shadow(0 0 6px rgba(232,174,0,.6))}
+.pair .link span{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.pair .meta{margin-left:auto;text-align:right;display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:flex-end}
+.pair .meta .since{font-size:12.5px;color:var(--muted)}
+
+/* factors */
+.fac-row{display:flex;gap:20px;padding:18px 20px;border-bottom:1px solid var(--line-soft);transition:.2s}
+.fac-row:hover{background:#FBFCFF;box-shadow:inset 0 0 22px rgba(232,174,0,.06)}
+.fac-row:last-child{border-bottom:none}
+.fac-main{flex:1;min-width:0}
+.fac-title{font-weight:600;font-size:15px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.wgt{font-size:11.5px;font-weight:700;background:var(--yellow-soft);color:var(--yellow-ink);padding:2px 9px;border-radius:99px;box-shadow:var(--glow-yellow)}
+.fac-desc{font-size:13.5px;color:var(--muted);margin-top:4px;max-width:64ch}
+.fac-side{flex:none;display:flex;gap:6px;align-items:flex-start}
+
+/* give points */
+.gp-row{display:flex;gap:18px;padding:14px 0;border-bottom:1px dashed var(--line);align-items:flex-start;flex-wrap:wrap}
+.gp-row:last-of-type{border-bottom:none}
+.gp-info{flex:1;min-width:220px}
+.gp-title{font-weight:600;font-size:14.5px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.gp-desc{font-size:12.5px;color:var(--muted);margin-top:2px}
+.gp-field{width:200px;flex:none}
+.gp-field .inp{text-align:right;font-weight:600}
+.gp-field small{display:block;text-align:right;margin-top:4px}
+
+/* evaluation detail page */
+.per-row{display:flex;align-items:center;gap:16px;padding:16px 20px;border-bottom:1px solid var(--line-soft);flex-wrap:wrap;transition:.2s}
+.per-row:hover{background:#FBFCFF;box-shadow:inset 0 0 22px rgba(30,63,190,.05)}
+.per-row:last-child{border-bottom:none}
+.per-num{width:34px;height:34px;border-radius:10px;background:var(--royal-soft);color:var(--royal);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex:none;box-shadow:var(--glow-royal)}
+.per-row.final .per-num{background:var(--yellow-soft);color:var(--yellow-ink);box-shadow:var(--glow-yellow)}
+.per-row.done .per-num{background:var(--ok-soft);color:var(--ok)}
+.per-main{flex:1;min-width:180px}
+.per-main b{font-family:var(--fd);font-size:16px;font-weight:600;display:block}
+.per-main small{color:var(--muted)}
+.per-score{display:flex;align-items:center;gap:8px;min-width:150px;flex-wrap:wrap}
+.per-person{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.per-person .nm{font-family:var(--fd);font-size:22px;font-weight:600;line-height:1.2}
+.per-person .meta{font-size:13px;color:var(--muted);margin-top:3px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+
+/* tiers — glowing ladder */
+.stair{display:flex;align-items:flex-end;gap:14px;height:250px;padding:10px 6px 0}
+.stair .t{flex:1;display:flex;flex-direction:column;justify-content:flex-end;text-align:center;gap:8px;height:100%}
+.stair .t .col{border-radius:12px 12px 0 0;color:#FFFFFF;display:flex;flex-direction:column;justify-content:flex-start;padding-top:14px;transition:height .5s ease,box-shadow .3s;box-shadow:inset 0 0 26px rgba(255,255,255,.12)}
+html.glow-on .stair .t .col{animation:glowPulse 3.2s ease-in-out infinite}
+.stair .t .col b{font-family:var(--fd);font-size:16px}
+.stair .t .col span{font-size:11.5px;opacity:.85}
+.tier-row{display:flex;align-items:center;gap:14px;padding:14px 20px;border-bottom:1px solid var(--line-soft);flex-wrap:wrap}
+.tier-row:last-child{border-bottom:none}
+.tier-row .sw{width:14px;height:14px;border-radius:4px;flex:none;box-shadow:0 0 8px currentColor}
+.tier-row b{font-weight:600;width:110px}
+.tier-row .minp{font-size:13px;color:var(--yellow-ink);background:var(--yellow-soft);padding:2px 10px;border-radius:99px;font-weight:700;white-space:nowrap;box-shadow:var(--glow-yellow)}
+.tier-row .perks{flex:1;font-size:13.5px;min-width:180px}
+.tier-row .acts{white-space:nowrap}
+
+/* buddy detail page */
+.bd-achieved{border-left:3px solid var(--ok);background:var(--ok-soft);border-radius:0 10px 10px 0;box-shadow:inset 0 0 20px rgba(30,63,190,.08)}
+.bd-pending{opacity:.8}
+
+/* sections & departments */
+.sec-row{display:flex;align-items:center;gap:16px;padding:17px 20px;border-bottom:1px solid var(--line-soft);flex-wrap:wrap}
+.sec-row:last-child{border-bottom:none}
+.sec-row .nm{width:200px}
+.sec-row .nm b{font-family:var(--fd);font-size:16px;font-weight:600;display:block}
+.sec-row .nm small{color:var(--muted)}
+.sec-row .bar{flex:1;height:8px;background:#E7EBF7;border-radius:99px;overflow:hidden;min-width:120px}
+.sec-row .bar span{display:block;height:100%;background:var(--royal);border-radius:99px;box-shadow:0 0 8px rgba(30,63,190,.55)}
+.sec-row .cnt{font-size:13px;color:var(--muted);width:110px;text-align:right}
+.dep-create{display:flex;gap:10px;flex-wrap:wrap}
+.dep-create .inp{flex:1;min-width:220px}
+
+/* logo upload (Settings) */
+.logo-box{display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+.logo-preview{width:96px;height:96px;border-radius:16px;border:2px dashed var(--line);overflow:hidden;display:flex;align-items:center;justify-content:center;background:#F7F9FF;flex:none}
+.logo-preview img{width:100%;height:100%;object-fit:cover;box-shadow:var(--glow-royal)}
+.logo-preview .ph{color:var(--muted);text-align:center;font-size:11.5px}
+.logo-preview .ph i{width:26px;height:26px;display:block;margin:0 auto 6px;opacity:.7}
+.logo-actions{display:flex;flex-direction:column;gap:8px}
+.logo-actions small{color:var(--muted)}
+
+/* permissions editor (User Management) */
+.perm-grid{border:1px solid var(--line);border-radius:10px;padding:8px 12px;max-height:210px;overflow-y:auto;background:#F7F9FF}
+.perm-grid label{display:flex;gap:9px;align-items:center;padding:4px 2px;font-size:13px;cursor:pointer;margin:0}
+.perm-grid input[type=checkbox]{width:15px;height:15px;accent-color:var(--royal);flex:none}
+
+/* backup */
+.bk-big{display:flex;flex-direction:column;gap:12px}
+.bk-stats{list-style:none}
+.bk-stats li{display:flex;justify-content:space-between;padding:11px 2px;border-bottom:1px solid var(--line-soft);font-size:14px;gap:10px}
+.bk-stats li:last-child{border-bottom:none}
+.bk-stats b{font-family:var(--fd);font-size:17px;text-align:right}
+.danger-zone{border:1px solid #E8C0B8;background:#FDF6F4;box-shadow:var(--glow-danger)}
+.danger-zone .panel-h{border-bottom-color:#F2D9D3}
+.danger-zone .panel-h h3{color:var(--danger)}
+
+/* settings */
+.set-grid{display:grid;grid-template-columns:1fr 320px;gap:18px;align-items:start}
+.glow-toggle{display:flex;gap:9px;align-items:center;font-size:13.5px;cursor:pointer;margin-top:14px}
+.glow-toggle input{width:16px;height:16px;accent-color:var(--royal)}
+
+/* modal & toast */
+#modalRoot .overlay{position:fixed;inset:0;background:rgba(16,34,107,.45);backdrop-filter:blur(2px);z-index:100;display:flex;align-items:flex-start;justify-content:center;padding:8vh 20px 20px;animation:fadein .18s ease}
+@keyframes fadein{from{opacity:0}}
+.modal{background:var(--surface);border-radius:16px;box-shadow:0 24px 60px rgba(16,34,107,.28),var(--glow-royal);width:100%;max-width:520px;animation:pop .22s cubic-bezier(.2,.9,.3,1.2);overflow:hidden}
+.modal.lg{max-width:640px}
+@keyframes pop{from{opacity:0;transform:translateY(14px) scale(.97)}}
+.modal-h{display:flex;align-items:center;gap:12px;padding:18px 22px;border-bottom:1px solid var(--line-soft)}
+.modal-h h3{font-size:18px;flex:1}
+.modal-b{padding:22px;max-height:60vh;overflow-y:auto}
+.modal-f{display:flex;justify-content:flex-end;gap:10px;padding:16px 22px;border-top:1px solid var(--line-soft);background:#F7F9FF}
+.confirm-msg{font-size:14.5px;color:#3A4670}
+#toastRoot{position:fixed;right:22px;bottom:22px;z-index:200;display:flex;flex-direction:column;gap:10px}
+.toast{display:flex;align-items:center;gap:11px;background:var(--royal-deep);color:#EEF1FE;padding:13px 18px;border-radius:12px;font-size:14px;font-weight:500;box-shadow:0 12px 30px rgba(16,34,107,.35),var(--glow-cyan);animation:tin .3s cubic-bezier(.2,.9,.3,1.2)}
+.toast i{width:17px;height:17px;color:var(--yellow-bright);flex:none}
+.toast.out{animation:tout .3s forwards}
+@keyframes tin{from{opacity:0;transform:translateX(30px)}}
+@keyframes tout{to{opacity:0;transform:translateY(10px)}}
+.pt{position:fixed;width:7px;height:7px;border-radius:50%;background:var(--yellow);pointer-events:none;z-index:300;box-shadow:0 0 8px rgba(232,174,0,.8)}
+.pt.bar{width:3px;height:9px;border-radius:2px;background:var(--royal);box-shadow:0 0 8px rgba(30,63,190,.8)}
+
+@media(max-width:1080px){
+  .g8,.g7,.g5,.g4,.g3{grid-column:span 12}
+  .steps{grid-template-columns:1fr}
+  .steps>div{border-left:none;border-top:1px solid var(--line-soft)}
+  .set-grid{grid-template-columns:1fr}
+}
+@media(max-width:920px){
+  #app{grid-template-columns:1fr}
+  #sidebar{position:fixed;left:0;top:0;z-index:60;width:262px;transform:translateX(-105%);transition:transform .28s ease}
+  #sidebar.open{transform:none}
+  .tb-burger{display:inline-flex}
+  #loginScreen{grid-template-columns:1fr}
+  .lg-left{display:none}
+  .tb-date{display:none}
+  .welcome-hero{flex-direction:column;text-align:left;padding:34px 28px}
+  .seal-wrap{width:170px;height:170px}
+  .stat-strip>div{border-left:none;border-top:1px solid var(--line-soft)}
+  .fac-row{flex-direction:column}
+  .fac-side{flex-direction:row}
+}
+</style>
+</head>
+<body>
+
+<!-- ==================== LOGIN ==================== -->
+<div id="loginScreen">
+  <div class="lg-left">
+    <div class="lg-brand">
+      <span class="logo-slot" id="lg-logo"></span>
+      <span id="lg-brand-name">Buddy Rewards</span>
+    </div>
+    <div class="lg-hero">
+      <div class="kick org-cap"><span id="lg-org">Nordvale &amp; Co.</span> · People Platform</div>
+      <h1>Good work deserves<br>to be <em>noticed</em>.</h1>
+      <p>The Buddy Reward Program recognizes the colleagues who make work lighter — pairing people up, reviewing what matters, and rewarding it in points that add up to something real.</p>
+    </div>
+    <div class="lg-points">
+      <div><i data-lucide="handshake"></i>All employee points redirect to their assigned buddy</div>
+      <div><i data-lucide="layers"></i>All points — evaluations and awards — count toward every tier</div>
+      <div><i data-lucide="shield-check"></i>Tick-box permissions — users only see the tabs they are granted</div>
+    </div>
+    <div class="lg-seal rosette" id="lg-rosette-lg"></div>
+  </div>
+  <div class="lg-right">
+    <div class="lg-card">
+      <div class="card-logo" id="lg-logo-card"></div>
+      <h2>Sign in</h2>
+      <p>Use your program account to continue.</p>
+      <div id="lg-err" class="lg-err hidden"><i data-lucide="circle-alert"></i><span>Incorrect username or password.</span></div>
+      <form id="loginForm" novalidate>
+        <div class="field"><label>Username</label><input class="inp" id="lg-user" autocomplete="username" placeholder="e.g. admin"></div>
+        <div class="field"><label>Password</label>
+          <div class="pw-wrap">
+            <input class="inp" id="lg-pass" type="password" autocomplete="current-password" placeholder="••••••••">
+            <button type="button" class="icon-btn" data-act="pw-eye" aria-label="Show password"><i data-lucide="eye"></i></button>
+          </div>
+        </div>
+        <button class="btn" id="lg-submit" type="button" style="width:100%;justify-content:center;padding:12px"><i data-lucide="log-in"></i>Sign in</button>
+      </form>
+      <div class="lg-demo">
+        <p>Demo accounts — click to fill, then Sign in</p>
+        <div class="lg-chips">
+          <button type="button" class="chip" data-act="demo" data-u="admin" data-p="admin123">Admin <small>full access</small></button>
+          <button type="button" class="chip" data-act="demo" data-u="daniel" data-p="mgr123">Manager</button>
+          <button type="button" class="chip" data-act="demo" data-u="priya" data-p="hr123">HR</button>
+          <button type="button" class="chip" data-act="demo" data-u="sam" data-p="emp123">Employee</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== APP ==================== -->
+<div id="app" class="hidden">
+  <aside id="sidebar"></aside>
+  <main>
+    <header class="topbar">
+      <button class="icon-btn tb-burger" data-act="sb-toggle" aria-label="Menu"><i data-lucide="menu"></i></button>
+      <div class="tb-title"><small id="tb-kicker">Overview</small><h2 id="tb-title">Home Page</h2></div>
+      <div class="tb-right">
+        <span class="tb-clock" title="Current time"><i data-lucide="clock"></i><span id="tb-clock">--:--:--</span></span>
+        <span class="tb-date" id="tb-date"></span>
+        <div class="tb-user" id="tb-user"></div>
+        <button class="icon-btn" data-act="logout" title="Sign out"><i data-lucide="log-out"></i></button>
+      </div>
+    </header>
+    <div class="pages" id="pages"></div>
+  </main>
+</div>
+
+<div id="modalRoot"></div>
+<div id="toastRoot"></div>
+
+<script>
+/* =========================================================
+   BUDDY REWARD SYSTEM — single-file app (Royal Blue / Yellow / White)
+   v3.8 — visual glow & animation pass:
+   · Home hero logo: rotating rainbow conic-gradient halo ring,
+     gentle float animation and glow pulse (rosette fallback too)
+   · Live digital clock on the Home hero + compact clock in the top bar
+   · Glowing colorful UI: animated sidebar tabs (staggered slide-in,
+     hover slide, colored glow accents), rainbow-glowing buttons,
+     glowing panels/topbar/cards/stat tiles with colored edge bars,
+     glowing tier ladder, badges, meters, charts, toasts & modals
+   · Settings toggle: "Colorful glow effects" (persisted) to turn it off
+   Retains: tick-box permissions (sidebar filtered, access-denied pages,
+   enforced actions), all points count toward all tiers, company logo
+   upload in Settings, points redirect to buddies, Buddy Details with
+   charts & forecast, service gating, Evaluation Done locks, Clear
+   History, period-matched Give Points, org name first-letter-capital.
+   ========================================================= */
+window.addEventListener('error',ev=>{try{console.error('[BRS]',ev.message)}catch(e){}});
+
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const daysAgo=n=>{const d=new Date();d.setDate(d.getDate()-n);return d.toISOString().slice(0,10)};
+const today=()=>new Date().toISOString().slice(0,10);
+const fmtDate=iso=>{try{return new Date(iso+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}catch(e){return iso}};
+const hash=s=>{let h=0;for(const c of String(s))h=(h*31+c.charCodeAt(0))|0;return Math.abs(h)};
+const refreshIcons=()=>{try{if(window.lucide)lucide.createIcons()}catch(e){}};
+const ic=(n,cls='')=>`<i data-lucide="${n}" class="${cls}"></i>`;
+const orgDisp=()=>{const s=String(DB.settings.orgName||'').trim();return s?s.charAt(0).toUpperCase()+s.slice(1):s;};
+const ORG=()=>esc(orgDisp());
+const EVAL_PERIODS=['01st Evaluation','02nd Evaluation','03rd Evaluation','04th Evaluation','Final Evaluation'];
+const PERIOD_DAYS={'01st Evaluation':90,'02nd Evaluation':150,'03rd Evaluation':210,'04th Evaluation':270,'Final Evaluation':365};
+const STAGE_NAMES={emp:'Employee',mgr:'Manager / Supervisor',hr:'HR'};
+const stageOfKind=kind=>kind==='buddy'?'emp':kind==='mgr'?'mgr':'hr';
+function addMonths(iso,m){const d=new Date(iso+'T00:00:00');d.setMonth(d.getMonth()+m);return d.toISOString().slice(0,10);}
+
+/* =========================================================
+   PERMISSIONS
+   ========================================================= */
+const PERMS=[
+  {key:'home',    label:'Home Page'},
+  {key:'dashboard',label:'Dashboard'},
+  {key:'buddies', label:'Buddies'},
+  {key:'employees',label:'Employees'},
+  {key:'history', label:'Reward History'},
+  {key:'rf_emp',  label:'Reward Factors · Employee'},
+  {key:'rf_mgr',  label:'Reward Factors · MGR/Sup.'},
+  {key:'rf_hr',   label:'Reward Factors · HR'},
+  {key:'ev_emp',  label:'Evaluation · Employee (Self review)'},
+  {key:'ev_mgr',  label:'Evaluation · MGR/Sup.'},
+  {key:'ev_hr',   label:'Evaluation · HR'},
+  {key:'tiers',   label:'Tier Configuration'},
+  {key:'sections',label:'Sections & Departments'},
+  {key:'backup',  label:'Backup & Restore'},
+  {key:'users',   label:'User Management'},
+  {key:'settings',label:'Settings'},
+  {key:'award',   label:'Award Points'},
+];
+const PERM_LABEL=Object.fromEntries(PERMS.map(p=>[p.key,p.label]));
+function roleDefaults(role){
+  if(role==='Admin')return PERMS.map(p=>p.key);
+  if(role==='Manager')return ['home','dashboard','buddies','employees','history','rf_emp','rf_mgr','ev_emp','ev_mgr','tiers','sections','award'];
+  if(role==='HR')return ['home','dashboard','buddies','employees','history','rf_hr','ev_emp','ev_hr','tiers','award'];
+  return ['home','dashboard','employees','history','ev_emp'];
+}
+
+/* ---------- rosette seal (fallback brand mark) ---------- */
+function rosette(size=160,petal='#FFC82E',core='#10226B',ring=false){
+  let petals='';
+  for(let i=0;i<28;i++){const a=i/28*Math.PI*2;
+    petals+=`<circle cx="${(100+86*Math.cos(a)).toFixed(1)}" cy="${(100+86*Math.sin(a)).toFixed(1)}" r="9.5" fill="${petal}"/>`;}
+  return `<svg viewBox="0 0 200 200" width="${size}" height="${size}" class="rosette">
+    <g ${ring?'class="ring"':''}>${petals}</g>
+    <circle cx="100" cy="100" r="74" fill="${petal}"/>
+    <circle cx="100" cy="100" r="62" fill="none" stroke="${core}" stroke-width="1.5" stroke-dasharray="2 4"/>
+    <text x="100" y="101" text-anchor="middle" dominant-baseline="central" font-family="Fraunces,serif" font-size="60" font-weight="600" fill="${core}">B</text></svg>`;
+}
+function brandMark(size){
+  const logo=DB.settings.logo;
+  if(logo)return `<span class="logo-slot" style="width:${size}px;height:${size}px"><img src="${logo}" alt="Company logo"></span>`;
+  return `<span class="rosette">${rosette(size)}</span>`;
+}
+
+/* =========================================================
+   DATA
+   ========================================================= */
+const DB_KEY='brs_db_v2';
+let DB=null;
+
+function defaultUsers(){
+  const mk=(username,password,name,role,empId)=>({id:uid(),username,password,name,role,active:true,empId,permissions:roleDefaults(role)});
+  return [
+    mk('admin','admin123','Ayesha Karim','Admin','emp2'),
+    mk('daniel','mgr123','Daniel Osei','Manager','emp3'),
+    mk('priya','hr123','Priya Nair','HR','emp4'),
+    mk('sam','emp123','Sam Torres','Employee','emp1'),
+  ];
+}
+function defaultTiers(){
+  return [
+    {id:uid(),name:'Bronze',color:'#9C5B2B',evalPeriod:'01st Evaluation',minPoints:0,perks:'Program welcome kit and a shout-out in the monthly digest.'},
+    {id:uid(),name:'Silver',color:'#7C8A93',evalPeriod:'02nd Evaluation',minPoints:150,perks:'One extra day of remote flexibility per month.'},
+    {id:uid(),name:'Gold',color:'#E8AE00',evalPeriod:'03rd Evaluation',minPoints:250,perks:'Conference or course budget of $500 plus priority on stretch projects.'},
+    {id:uid(),name:'Platinum',color:'#1E3FBE',evalPeriod:'04th Evaluation',minPoints:350,perks:'$1,200 development budget and an annual dinner with the leadership team.'},
+    {id:uid(),name:'Diamond',color:'#0096C7',evalPeriod:'Final Evaluation',minPoints:1000,perks:'$2,500 development budget, executive mentorship and a spot on the program advisory board.'},
+  ];
+}
+
+function seedDB(){
+  const emp=(id,code,name,section,title,jd,email)=>({id,code,name,section,title,joinDate:jd,email});
+  const employees=[
+    emp('emp1','EMP-001','Sam Torres','eng','Senior Developer','2021-03-15','sam.torres@nordvale.co'),
+    emp('emp2','EMP-002','Ayesha Karim','pops','HR Lead','2020-06-01','ayesha.karim@nordvale.co'),
+    emp('emp3','EMP-003','Daniel Osei','eng','Engineering Manager','2019-11-04','daniel.osei@nordvale.co'),
+    emp('emp4','EMP-004','Priya Nair','pops','HR Manager','2019-02-18','priya.nair@nordvale.co'),
+    emp('emp5','EMP-005','Lena Fischer','des','Product Designer','2022-01-10','lena.fischer@nordvale.co'),
+    emp('emp6','EMP-006','Marcus Chen','eng','Backend Developer','2022-08-22','marcus.chen@nordvale.co'),
+    emp('emp7','EMP-007','Sofia Reyes','sales','Account Executive','2023-04-03','sofia.reyes@nordvale.co'),
+    emp('emp8','EMP-008','Omar Haddad','sup','Support Specialist','2023-09-11','omar.haddad@nordvale.co'),
+    emp('emp9','EMP-009','Grace Kim','des','UX Researcher','2022-05-30','grace.kim@nordvale.co'),
+    emp('emp10','EMP-010','Tomás Silva','sales','Sales Lead','2020-07-20','tomas.silva@nordvale.co'),
+    emp('emp11','EMP-011','Nadia Rahman','eng','QA Engineer','2023-02-13','nadia.rahman@nordvale.co'),
+    emp('emp12','EMP-012','Jonas Weber','sup','Support Lead','2021-10-05','jonas.weber@nordvale.co'),
+    emp('emp13','EMP-013','Ivy Chen','sup','Support Associate',daysAgo(120),'ivy.chen@nordvale.co'),
+    emp('emp14','EMP-014','Leo Martins','sales','Sales Associate',daysAgo(45),'leo.martins@nordvale.co'),
+  ];
+  const departments=[
+    {id:'dep1',name:'Technology'},
+    {id:'dep2',name:'Commercial'},
+    {id:'dep3',name:'Corporate Operations'},
+  ];
+  const sections=[
+    {id:'eng',name:'Engineering',dept:'dep1',lead:'emp3',desc:'Platform, services and quality engineering.'},
+    {id:'pops',name:'People Ops',dept:'dep3',lead:'emp4',desc:'HR operations, culture and the buddy program itself.'},
+    {id:'des',name:'Design',dept:'dep1',lead:'emp5',desc:'Product design and UX research.'},
+    {id:'sales',name:'Sales',dept:'dep2',lead:'emp10',desc:'New business and account management.'},
+    {id:'sup',name:'Support',dept:'dep2',lead:'emp12',desc:'Customer support and escalation handling.'},
+  ];
+  const buddyPeople=[
+    {id:'bud1',code:'EMP-021',name:'Ravi Menon',section:'eng',contact:'+1 555 0121',added:daysAgo(320)},
+    {id:'bud2',code:'EMP-022',name:'Hana Suzuki',section:'eng',contact:'+1 555 0122',added:daysAgo(200)},
+    {id:'bud3',code:'EMP-023',name:'Peter Novak',section:'des',contact:'+1 555 0123',added:daysAgo(260)},
+    {id:'bud4',code:'EMP-024',name:'Amara Diallo',section:'sup',contact:'+1 555 0124',added:daysAgo(110)},
+  ];
+  const buddies=[
+    {id:uid(),empId:'emp6',buddyId:'bud1',since:daysAgo(300),status:'active'},
+    {id:uid(),empId:'emp11',buddyId:'bud2',since:daysAgo(180),status:'active'},
+    {id:uid(),empId:'emp9',buddyId:'bud3',since:daysAgo(240),status:'active'},
+    {id:uid(),empId:'emp13',buddyId:'bud4',since:daysAgo(115),status:'active'},
+  ];
+  const F=(title,desc,maxPoints,evalPeriod)=>({id:uid(),title,desc,maxPoints,evalPeriod});
+  const factors={
+    emp:[
+      F('Onboarding Support','Guiding the assigned employee through their first weeks — tools, process and people.',50,'01st Evaluation'),
+      F('Goal Setting','Helping the assigned employee define and commit to their first goals.',40,'01st Evaluation'),
+      F('Skill Coaching','Hands-on coaching and knowledge transfer during the ramp-up period.',60,'02nd Evaluation'),
+      F('Feedback Culture','Regular, constructive check-ins and feedback loops.',40,'02nd Evaluation'),
+      F('Independence Growth','Evidence of the assigned employee working independently.',60,'03rd Evaluation'),
+      F('Collaboration Network','Introducing the employee to the wider team and cross-section contacts.',50,'03rd Evaluation'),
+      F('Performance Readiness','Readiness to carry a full workload without support.',70,'04th Evaluation'),
+      F('Program Contribution','Contributions back to the buddy program itself — playbooks, onboarding notes.',40,'04th Evaluation'),
+      F('Final Integration','Overall integration into the section, culture and delivery rhythm.',80,'Final Evaluation'),
+    ],
+    mgr:[
+      F('Delivery Ownership','Owning deliverables end-to-end with predictable outcomes.',60,'01st Evaluation'),
+      F('Team Collaboration','Working smoothly within the section and across teams.',50,'01st Evaluation'),
+      F('Quality of Work','Consistent quality, reviews and standards adherence.',60,'02nd Evaluation'),
+      F('Initiative','Picking up problems nobody assigned and carrying them to done.',50,'02nd Evaluation'),
+      F('Communication','Clear, timely communication with the team and stakeholders.',40,'03rd Evaluation'),
+      F('Mentoring Others','Supporting the growth of junior teammates.',50,'03rd Evaluation'),
+      F('Leadership Signals','Signals of growing leadership — leading threads, reviews, planning.',60,'04th Evaluation'),
+      F('Process Improvement','Improving the team\'s tools, process or documentation.',40,'04th Evaluation'),
+      F('Overall Impact','Net impact on the section\'s goals for the full cycle.',80,'Final Evaluation'),
+    ],
+    hr:[
+      F('Values Alignment','Living the organization\'s values in daily work.',50,'01st Evaluation'),
+      F('Culture Contribution','Making the workplace warmer — celebrations, onboarding help, kindness.',40,'01st Evaluation'),
+      F('Attendance & Reliability','Reliable presence and dependable follow-through.',40,'02nd Evaluation'),
+      F('Policy Adherence','Clean adherence to company policies and guidelines.',30,'02nd Evaluation'),
+      F('Peer Respect','Respect and trust earned from colleagues across sections.',50,'03rd Evaluation'),
+      F('Conflict Handling','Handling disagreements constructively and early.',40,'03rd Evaluation'),
+      F('Growth Mindset','Actively seeking and applying feedback.',40,'04th Evaluation'),
+      F('Wellbeing & Balance','Healthy working habits and sustainable pace.',30,'04th Evaluation'),
+      F('Cycle Summary','Overall summary judgment for the full evaluation cycle.',70,'Final Evaluation'),
+    ],
+  };
+  const H=(e,p,t,n,b,d,bud)=>({id:uid(),empId:e,points:p,type:t,note:n,by:b,date:daysAgo(d),buddyId:bud||null});
+  const history=[
+    H('emp11',120,'Manager Award','Automated the full regression suite ahead of schedule.','emp3',3),
+    H('emp6',100,'Manager Award','Billing refactor delivered cleanly with zero downtime.','emp3',8),
+    H('emp9',60,'Peer Nomination','Ran three user interviews for the Design team on short notice.','emp5',9),
+    H('emp4',60,'Peer Nomination','Sorted a tricky payroll edge case same-day.','emp2',10),
+    H('emp1',70,'Peer Nomination','Paired with Nadia to unblock the QA pipeline.','emp6',12),
+    H('emp5',80,'Peer Nomination','Rebuilt the onboarding deck for new design hires.','emp9',5),
+    H('emp7',90,'Manager Award','Rescued the Meridian account with a stellar recovery plan.','emp10',15),
+    H('emp12',60,'Peer Nomination','Wrote the escalation playbook everyone now uses.','emp8',18),
+    H('emp11',100,'Peer Nomination','Helped the Design team debug their prototype environment.','emp9',20),
+    H('emp8',50,'Peer Nomination','Covered the weekend queue without being asked.','emp12',22),
+    H('emp10',70,'Manager Award','Mentored two junior AEs to their first closed deals.','emp2',25),
+    H('emp2',50,'Spot Bonus','Rolled out the new review cycle two weeks early.','emp4',40),
+    H('emp11',90,'Spot Bonus','Zero critical escapes for three sprints in a row.','emp4',48),
+    H('emp3',60,'Peer Nomination','Stepped in to lead sprint planning while the EM was out.','emp1',30),
+    H('emp6',80,'Peer Nomination','Onboarded the new intern and wrote the setup guide.','emp11',35),
+    H('emp9',40,'Spot Bonus','Insightful research readout that changed the roadmap.','emp4',75),
+    H('emp6',120,'Spot Bonus','Fixed a data-loss bug found in production over the weekend.','emp4',70),
+    H('emp7',60,'Peer Nomination','Shared her deal-review template with the whole team.','emp8',66),
+    H('emp5',60,'Spot Bonus','Design system adoption pushed past 80%.','emp4',60),
+    H('emp8',60,'Spot Bonus','CSAT up 12 points in his queue this quarter.','emp4',100),
+    H('emp1',90,'Manager Award','Led the migration dry-run flawlessly.','emp3',85),
+    H('emp12',80,'Manager Award','Support backlog at an all-time low.','emp2',130),
+    H('emp10',60,'Peer Nomination','Always first to share leads with teammates.','emp7',95),
+    H('emp11',150,'Milestone','One-year program milestone.','emp2',95),
+    H('emp5',90,'Manager Award','Owned the relaunch of the marketing site design.','emp2',110),
+    H('emp11',120,'Manager Award','Quarterly quality initiative lead.','emp3',160),
+    H('emp6',90,'Peer Nomination','Reviewed 20+ PRs for teammates this month.','emp1',120),
+    H('emp1',50,'Peer Nomination','Wrote the incident postmortem template.','emp3',150),
+    H('emp7',40,'Spot Bonus','Great customer win story at the all-hands.','emp4',140),
+    H('emp12',60,'Peer Nomination','Trained the new support hires.','emp8',130),
+    H('emp4',50,'Spot Bonus','Flawless HR audit preparation.','emp2',120),
+    H('emp3',80,'Milestone','Five years at Nordvale.','emp2',180),
+    H('emp2',40,'Peer Nomination','Ran the culture committee all year.','emp4',160),
+    H('emp11',80,'Peer Nomination','Cross-team debugging hero.','emp6',130),
+    H('emp11',90,'Spot Bonus','Test coverage pushed from 54% to 81%.','emp4',190),
+  ];
+  const pairMap={};
+  buddies.forEach(p=>{if(p.status==='active')pairMap[p.empId]=p.buddyId;});
+  history.forEach(h=>{if(pairMap[h.empId])h.buddyId=pairMap[h.empId];});
+  const evaluations={};
+  const buddyEvals={};
+  const seedBuddyEval=(budId,empId,period,fIdxs,pts,dOffset)=>{
+    const points={};
+    let total=0;
+    fIdxs.forEach((fi,i)=>{points[factors.emp[fi].id]=pts[i];total+=pts[i];});
+    buddyEvals[budId]=buddyEvals[budId]||{periods:{}};
+    buddyEvals[budId].periods[period]={points,comment:'',status:'submitted',date:daysAgo(dOffset)};
+    history.push({id:uid(),empId,points:total,type:'Buddy Evaluation Points',
+      note:`${period} — Employee evaluation`,by:'emp2',date:daysAgo(dOffset),buddyId:budId,evalPeriod:period});
+  };
+  seedBuddyEval('bud1','emp6','01st Evaluation',[0,1],[40,30],25);
+  seedBuddyEval('bud1','emp6','02nd Evaluation',[2,3],[40,30],12);
+  seedBuddyEval('bud2','emp11','01st Evaluation',[0,1],[50,38],60);
+  seedBuddyEval('bud2','emp11','02nd Evaluation',[2,3],[60,40],40);
+  seedBuddyEval('bud2','emp11','03rd Evaluation',[4,5],[55,45],20);
+  seedBuddyEval('bud2','emp11','04th Evaluation',[6,7],[60,40],8);
+  seedBuddyEval('bud3','emp9','01st Evaluation',[0,1],[30,30],30);
+  return {
+    employees,buddyPeople,departments,sections,buddies,factors,evaluations,buddyEvals,
+    tiers:defaultTiers(),history,users:defaultUsers(),
+    settings:{orgName:'Nordvale & Co.',programName:'Buddy Rewards',pointName:'Buddy Points',period:'Q3 2025',monthlyCap:150,logo:'',glow:true},
+    meta:{lastBackup:null}
+  };
+}
+
+function normPeriods(obj){
+  if(obj&&obj.periods&&typeof obj.periods==='object')return {periods:obj.periods};
+  return {periods:{}};
+}
+function storeFor(kind,id){
+  if(kind==='buddy'){
+    DB.buddyEvals[id]=normPeriods(DB.buddyEvals[id]);
+    return DB.buddyEvals[id];
+  }
+  DB.evaluations[id]=DB.evaluations[id]||{hr:'pending'};
+  const key=kind==='hr'?'hrEval':'mgr';
+  DB.evaluations[id][key]=normPeriods(DB.evaluations[id][key]);
+  return DB.evaluations[id][key];
+}
+function aggStatus(store){
+  const ps=Object.values((store&&store.periods)||{});
+  if(ps.some(p=>p.status==='submitted'))return 'submitted';
+  if(ps.some(p=>p.status==='draft'))return 'draft';
+  return 'pending';
+}
+function storeTotal(store){
+  let t=0;
+  Object.values((store&&store.periods)||{}).forEach(p=>{
+    if(p.status==='submitted'&&p.points)Object.values(p.points).forEach(v=>t+=(+v||0));
+  });
+  return t;
+}
+function periodPts(rec){
+  if(!rec||!rec.points)return 0;
+  return Object.values(rec.points).reduce((a,v)=>a+(+v||0),0);
+}
+function doneCount(store){
+  if(!store||!store.periods)return 0;
+  return EVAL_PERIODS.filter(p=>((store.periods[p]||{}).status)==='submitted').length;
+}
+function periodFactors(stage,period){
+  return (DB.factors[stage]||[]).filter(f=>f.evalPeriod===period);
+}
+function periodMax(stage,period){
+  return periodFactors(stage,period).reduce((a,f)=>a+(+f.maxPoints||0),0);
+}
+function setMaxTotal(stage){
+  return (DB.factors[stage]||[]).reduce((a,f)=>a+(+f.maxPoints||0),0);
+}
+
+function normalizeDB(){
+  if(!Array.isArray(DB.employees))DB.employees=[];
+  if(!Array.isArray(DB.sections))DB.sections=[];
+  if(!Array.isArray(DB.departments)||!DB.departments.length){
+    DB.departments=[{id:'dep1',name:'Technology'},{id:'dep2',name:'Commercial'},{id:'dep3',name:'Corporate Operations'}];
+  }
+  const map={Engineering:'dep1',Design:'dep1',Sales:'dep2',Support:'dep2','People Ops':'dep3'};
+  DB.sections.forEach(s=>{if(!s.dept||!DB.departments.some(d=>d.id===s.dept))s.dept=map[s.name]||DB.departments[0].id});
+  if(!DB.factors||typeof DB.factors!=='object')DB.factors={};
+  ['emp','mgr','hr'].forEach(k=>{if(!Array.isArray(DB.factors[k]))DB.factors[k]=[]});
+  if(Array.isArray(DB.rewardFactors)){
+    if(DB.rewardFactors.length&&!DB.factors.emp.length){
+      DB.factors.emp=DB.rewardFactors.map(f=>({
+        id:f.id||uid(),title:f.title||'Untitled factor',desc:f.desc||'',
+        maxPoints:+f.maxPoints||(+f.weight||100),
+        evalPeriod:EVAL_PERIODS.includes(f.evalPeriod)?f.evalPeriod:'01st Evaluation'
+      }));
+    }
+    delete DB.rewardFactors;
+  }
+  ['emp','mgr','hr'].forEach(k=>DB.factors[k].forEach(f=>{
+    if(f.maxPoints==null)f.maxPoints=100;
+    if(!EVAL_PERIODS.includes(f.evalPeriod))f.evalPeriod='01st Evaluation';
+  }));
+  if(!DB.buddyPeople)DB.buddyPeople=[];
+  if(!Array.isArray(DB.buddies))DB.buddies=[];
+  DB.buddies=DB.buddies.filter(b=>b&&b.empId&&b.buddyId);
+  if(!DB.evaluations||typeof DB.evaluations!=='object')DB.evaluations={};
+  if(!DB.buddyEvals||typeof DB.buddyEvals!=='object')DB.buddyEvals={};
+  DB.employees.forEach(e=>{
+    DB.evaluations[e.id]=DB.evaluations[e.id]||{hr:'pending'};
+    DB.evaluations[e.id].mgr=normPeriods(DB.evaluations[e.id].mgr);
+    DB.evaluations[e.id].hrEval=normPeriods(DB.evaluations[e.id].hrEval);
+    if(!DB.evaluations[e.id].hr)DB.evaluations[e.id].hr='pending';
+  });
+  DB.buddyPeople.forEach(b=>{DB.buddyEvals[b.id]=normPeriods(DB.buddyEvals[b.id])});
+  if(!Array.isArray(DB.tiers)||!DB.tiers.length)DB.tiers=defaultTiers();
+  DB.tiers.forEach(t=>{
+    if(t.minPoints==null)t.minPoints=(typeof t.min==='number'?t.min:0);
+    if(!EVAL_PERIODS.includes(t.evalPeriod))t.evalPeriod='01st Evaluation';
+    delete t.min;delete t.max;delete t.pointsThrough;
+    if(!t.color)t.color='#5A678F';
+    if(t.perks==null)t.perks='';
+  });
+  if(!Array.isArray(DB.history))DB.history=[];
+  DB.history.forEach(h=>{if(typeof h.points!=='number')h.points=+h.points||0});
+  if(!Array.isArray(DB.users))DB.users=[];
+  if(!DB.users.length)DB.users=defaultUsers();
+  DB.users.forEach(u=>{
+    if(!Array.isArray(u.permissions))u.permissions=roleDefaults(u.role||'Employee');
+  });
+  if(!DB.settings||typeof DB.settings!=='object')DB.settings={};
+  DB.settings={orgName:DB.settings.orgName||'Nordvale & Co.',programName:DB.settings.programName||'Buddy Rewards',
+    pointName:DB.settings.pointName||'Buddy Points',period:DB.settings.period||'Q3 2025',
+    monthlyCap:+DB.settings.monthlyCap||150,
+    logo:typeof DB.settings.logo==='string'?DB.settings.logo:'',
+    glow:DB.settings.glow!==false};
+  if(!DB.meta||typeof DB.meta!=='object')DB.meta={lastBackup:null};
+}
+
+function loadDB(){
+  try{
+    const raw=localStorage.getItem(DB_KEY);
+    if(raw){DB=JSON.parse(raw);normalizeDB();return}
+  }catch(e){console.error('[BRS] stored data unreadable — reseeding',e)}
+  DB=seedDB();
+  try{saveDB()}catch(e){console.error('[BRS] could not persist seed',e)}
+}
+function saveDB(){try{localStorage.setItem(DB_KEY,JSON.stringify(DB))}catch(e){console.error('[BRS] save failed',e)}}
+
+/* ---------- lookups ---------- */
+const empById=id=>DB.employees.find(e=>e.id===id);
+const budById=id=>DB.buddyPeople.find(b=>b.id===id);
+const secById=id=>DB.sections.find(s=>s.id===id);
+const secName=id=>(secById(id)||{}).name||'—';
+const depName=id=>(DB.departments.find(d=>d.id===id)||{}).name||'';
+const pointsOf=id=>DB.history.filter(h=>h.empId===id&&!h.buddyId).reduce((a,h)=>a+h.points,0);
+const buddyPointsOf=budId=>DB.history.filter(h=>h.buddyId===budId).reduce((a,h)=>a+h.points,0);
+const activePairingOf=empId=>DB.buddies.find(b=>b.status==='active'&&b.empId===empId);
+const activePairingOfBuddy=budId=>DB.buddies.find(b=>b.status==='active'&&b.buddyId===budId);
+const buddyLedger=budId=>DB.history.filter(h=>h.buddyId===budId&&h.points>0).sort((a,b)=>a.date.localeCompare(b.date));
+
+/* =========================================================
+   PERMISSION CHECKS
+   ========================================================= */
+function hasPerm(key){
+  if(!USER)return false;
+  if(USER.role==='Admin')return true;
+  return Array.isArray(USER.permissions)&&USER.permissions.includes(key);
+}
+function needPerm(key){
+  if(hasPerm(key))return true;
+  toast(`Permission required: ${PERM_LABEL[key]||key}. Ask an administrator to tick it in User Management.`,'lock');
+  return false;
+}
+const evPermOf=kind=>kind==='buddy'?'ev_emp':kind==='hr'?'ev_hr':'ev_mgr';
+
+/* =========================================================
+   TIER ACHIEVEMENT — ALL points count toward ALL tiers
+   ========================================================= */
+function periodDoneForBuddy(budId,period){
+  const st=DB.buddyEvals[budId];
+  return !!(st&&st.periods&&st.periods[period]&&st.periods[period].status==='submitted');
+}
+function achievedTierOf(budId){
+  const pts=buddyPointsOf(budId);
+  const ts=[...DB.tiers].sort((a,b)=>(b.minPoints||0)-(a.minPoints||0));
+  for(const t of ts){
+    if(pts>=(t.minPoints||0)&&periodDoneForBuddy(budId,t.evalPeriod))return t;
+  }
+  return null;
+}
+function allTiersProgress(budId){
+  const pts=buddyPointsOf(budId);
+  return [...DB.tiers].sort((a,b)=>(a.minPoints||0)-(b.minPoints||0)).map(t=>{
+    const periodOk=periodDoneForBuddy(budId,t.evalPeriod);
+    return {tier:t,pointsOk:pts>=(t.minPoints||0),periodOk,achieved:pts>=(t.minPoints||0)&&periodOk};
+  });
+}
+function nextTierInfo(budId){
+  const pts=buddyPointsOf(budId);
+  const ts=[...DB.tiers].sort((a,b)=>(a.minPoints||0)-(b.minPoints||0));
+  for(const t of ts){
+    const periodDone=periodDoneForBuddy(budId,t.evalPeriod);
+    if(pts<(t.minPoints||0)||!periodDone){
+      return {tier:t,pointsNeeded:Math.max(0,(t.minPoints||0)-pts),periodDone};
+    }
+  }
+  return null;
+}
+function nextTierHint(budId){
+  const n=nextTierInfo(budId);
+  if(!n)return null;
+  const need=[];
+  if(n.pointsNeeded>0)need.push(`${n.pointsNeeded} more pts`);
+  if(!n.periodDone)need.push(`${n.tier.evalPeriod} completed`);
+  return {tier:n.tier,need:need.join(' · ')};
+}
+function tierAchievedDate(budId,tier){
+  const led=buddyLedger(budId);
+  let cum=0,ptsDate=null;
+  for(const x of led){cum+=x.points;if(cum>=(tier.minPoints||0)){ptsDate=x.date;break;}}
+  if((tier.minPoints||0)===0&&!ptsDate)ptsDate=led.length?led[0].date:today();
+  const rec=(DB.buddyEvals[budId]&&DB.buddyEvals[budId].periods&&DB.buddyEvals[budId].periods[tier.evalPeriod])||null;
+  const perOk=!!(rec&&rec.status==='submitted');
+  if(ptsDate&&perOk){
+    const perDate=rec.date||today();
+    return {ok:true,date:ptsDate>perDate?ptsDate:perDate};
+  }
+  return {ok:false};
+}
+function tierChipIfAchieved(budId){
+  const t=achievedTierOf(budId);
+  return t?`<span class="badge" style="background:${t.color}1C;color:${t.color}">${ic('medal')}${esc(t.name)}</span>`
+          :'<span class="badge b-mute">Not achieved</span>';
+}
+const AVC=['#1E3FBE','#10226B','#C79000','#5A7BEA','#8A6A00','#1F7A8C','#7A3E5F'];
+function avatar(p,size=34){
+  const init=(p.name||'?').split(' ').map(w=>w[0]).slice(0,2).join('');
+  const c=AVC[hash(p.id||'?')%AVC.length];
+  return `<span class="av" style="width:${size}px;height:${size}px;background:${c};font-size:${Math.round(size*.36)}px">${esc(init)}</span>`;
+}
+const empOpts=(sel,filter)=>DB.employees.filter(filter||(()=>true)).map(e=>`<option value="${e.id}" ${sel===e.id?'selected':''}>${esc(e.name)} — ${e.code}</option>`).join('');
+const nextBuddyCode=()=>{let n=DB.employees.length+DB.buddyPeople.length+1,code;
+  do{code='EMP-'+String(n++).padStart(3,'0')}while([...DB.employees,...DB.buddyPeople].some(x=>x.code===code));return code;};
+const statusBadge=st=>st==='submitted'?'<span class="badge b-ok">Submitted</span>'
+  :st==='draft'?'<span class="badge b-warn">Draft</span>':'<span class="badge b-mute">Pending</span>';
+const DONE_BADGE=`<span class="badge b-ok">${ic('badge-check')}Evaluation Done</span>`;
+function daysSince(iso){
+  if(!iso)return null;
+  const d=new Date(iso+'T00:00:00');if(isNaN(d))return null;
+  const now=new Date();now.setHours(0,0,0,0);
+  return Math.floor((now-d)/86400000);
+}
+function buddyAssigned(budId){const p=activePairingOfBuddy(budId);return p?empById(p.empId):null;}
+function personServiceDays(kind,id){
+  if(kind==='buddy'){const e=buddyAssigned(id);return e?daysSince(e.joinDate):null;}
+  const e=empById(id);return e?daysSince(e.joinDate):null;
+}
+const serviceBadge=sd=>sd==null
+  ?'<span class="badge b-mute">—</span>'
+  :`<span class="badge ${sd>365?'b-ok':'b-steel'}" title="${sd>365?'All periods unlocked':'Periods unlock at 90 · 150 · 210 · 270 · 365 days'}">${sd} days</span>`;
+function rateFromLedger(led){
+  if(!led||!led.length)return 0;
+  const total=led.reduce((a,x)=>a+x.points,0);
+  const d0=new Date(led[0].date+'T00:00:00');
+  const months=Math.max((Date.now()-d0.getTime())/(1000*60*60*24*30.44),1);
+  return total/months;
+}
+
+/* =========================================================
+   SESSION / AUTH
+   ========================================================= */
+let USER=null;
+function tryLogin(u,p){
+  const user=(DB.users||[]).find(x=>x.username===u&&x.password===p);
+  if(!user||!user.active)return null;
+  try{sessionStorage.setItem('brs_user',user.username)}catch(e){}
+  return user;
+}
+function enterApp(user){
+  USER=user;
+  const ls=$('#loginScreen'),ap=$('#app');
+  if(ls)ls.classList.add('hidden');
+  if(ap)ap.classList.remove('hidden');
+  try{buildSidebar()}catch(err){console.error('[BRS] sidebar',err);
+    const sb=$('#sidebar');if(sb)sb.innerHTML='<div class="sb-brand">'+brandMark(36)+'<span><b>Menu unavailable</b></span></div>';}
+  try{renderUserChip()}catch(err){console.error('[BRS] user chip',err)}
+  go('welcome');
+}
+function logout(){
+  try{sessionStorage.removeItem('brs_user')}catch(e){}
+  USER=null;
+  $('#app').classList.add('hidden');
+  $('#loginScreen').classList.remove('hidden');
+  const u=$('#lg-user'),p=$('#lg-pass');
+  if(u)u.value='';if(p)p.value='';
+  const err=$('#lg-err');if(err)err.classList.add('hidden');
+  refreshIcons();
+  toast('Signed out. See you soon.','log-out');
+}
+function renderUserChip(){
+  const el=$('#tb-user');if(!el||!USER)return;
+  el.innerHTML=`${avatar({name:USER.name,id:USER.empId||USER.username},30)}<span><b>${esc(USER.name)}</b><small>${esc(USER.role)}</small></span>`;
+}
+
+function showLoginError(msg){
+  const box=$('#lg-err');if(!box)return;
+  const span=box.querySelector('span');if(span)span.textContent=msg;
+  box.classList.remove('hidden');
+  const card=document.querySelector('.lg-card');
+  if(card){card.classList.remove('shake');void card.offsetWidth;card.classList.add('shake');}
+  refreshIcons();
+}
+function doLogin(ev){
+  if(ev&&ev.preventDefault)ev.preventDefault();
+  try{
+    const uEl=$('#lg-user'),pEl=$('#lg-pass');
+    const u=(uEl?uEl.value:'').trim(),p=(pEl?pEl.value:'');
+    if(!u||!p){showLoginError('Please enter both username and password.');return false}
+    const user=tryLogin(u,p);
+    if(user){
+      const err=$('#lg-err');if(err)err.classList.add('hidden');
+      enterApp(user);
+      toast('Welcome back, '+user.name.split(' ')[0]+'.','sparkles');
+    }else{
+      showLoginError('Incorrect username or password.');
+    }
+  }catch(err){
+    console.error('[BRS] login error',err);
+    showLoginError('Login failed: '+(err&&err.message?err.message:err));
+  }
+  return false;
+}
+function wireLogin(){
+  const form=$('#loginForm');
+  if(form)form.addEventListener('submit',e=>{e.preventDefault();doLogin(e);});
+  const btn=$('#lg-submit');
+  if(btn)btn.addEventListener('click',e=>{e.preventDefault();doLogin(e);});
+}
+function restoreSession(){
+  try{
+    const sess=sessionStorage.getItem('brs_user');
+    if(sess){
+      const u=(DB.users||[]).find(x=>x.username===sess&&x.active);
+      if(u)enterApp(u);
+    }
+  }catch(err){console.error('[BRS] session restore failed',err)}
+}
+
+function refreshBrandChrome(){
+  try{
+    const bn=$('#lg-brand-name');if(bn)bn.textContent=DB.settings.programName;
+    const lo=$('#lg-org');if(lo)lo.textContent=orgDisp();
+    const slot=$('#lg-logo');
+    if(slot){
+      slot.innerHTML=DB.settings.logo
+        ?`<img src="${DB.settings.logo}" alt="Company logo">`
+        :rosette(44);
+    }
+    const card=$('#lg-logo-card');
+    if(card){
+      card.innerHTML=DB.settings.logo
+        ?`<img src="${DB.settings.logo}" alt="Company logo">`
+        :rosette(60);
+    }
+  }catch(err){console.error('[BRS] brand chrome',err)}
+}
+
+/* =========================================================
+   NAV — filtered by ticked permissions
+   ========================================================= */
+const NAV=[
+  {group:'Overview',items:[
+    {id:'welcome',label:'Home Page',icon:'home',perm:'home'},
+    {id:'dashboard',label:'Dashboard',icon:'layout-dashboard',perm:'dashboard'}]},
+  {group:'People',items:[
+    {id:'buddies',label:'Buddies',icon:'handshake',perm:'buddies'},
+    {id:'employees',label:'Employees',icon:'users',perm:'employees'},
+    {id:'history',label:'Reward History',icon:'medal',perm:'history'}]},
+  {group:'Reviews',items:[
+    {id:'rf_emp',label:'Reward Factors · Employee',icon:'list-checks',perm:'rf_emp'},
+    {id:'rf_mgr',label:'Reward Factors · MGR/Sup.',icon:'clipboard-check',perm:'rf_mgr'},
+    {id:'rf_hr',label:'Reward Factors · HR',icon:'shield-check',perm:'rf_hr'},
+    {id:'ev_emp',label:'Evaluation · Employee',icon:'pen-line',perm:'ev_emp'},
+    {id:'ev_mgr',label:'Evaluation · MGR/Sup.',icon:'clipboard-list',perm:'ev_mgr'},
+    {id:'ev_hr',label:'Evaluation · HR',icon:'badge-check',perm:'ev_hr'}]},
+  {group:'Configuration',items:[
+    {id:'tiers',label:'Tier Configuration',icon:'layers',perm:'tiers'},
+    {id:'sections',label:'Sections',icon:'building-2',perm:'sections'}]},
+  {group:'Administration',items:[
+    {id:'backup',label:'Backup',icon:'database',perm:'backup'},
+    {id:'users',label:'User Management',icon:'user-cog',perm:'users'},
+    {id:'settings',label:'Settings',icon:'settings',perm:'settings'}]},
+];
+const PAGE_PERM={welcome:'home',dashboard:'dashboard',buddies:'buddies',employees:'employees',history:'history',
+  rf_emp:'rf_emp',rf_mgr:'rf_mgr',rf_hr:'rf_hr',ev_emp:'ev_emp',ev_mgr:'ev_mgr',ev_hr:'ev_hr',
+  tiers:'tiers',sections:'sections',backup:'backup',users:'users',settings:'settings'};
+
+let CURRENT='welcome';
+const FS={empQ:'',empSec:'all',histEmp:'all',histType:'all',secDep:'all',evDetail:null,budDetail:null};
+
+function buildSidebar(){
+  const el=$('#sidebar');if(!el)return;
+  const groups=NAV.map(g=>({...g,items:g.items.filter(it=>hasPerm(it.perm))})).filter(g=>g.items.length);
+  el.innerHTML=`
+    <div class="sb-brand">${brandMark(36)}
+      <span><b id="sb-prog">${esc(DB.settings.programName)}</b><small class="org-cap" id="sb-org">${ORG()}</small></span></div>
+    ${groups.map(g=>`<div class="sb-group">${g.group}</div>`+g.items.map(it=>
+      `<div class="sb-item" data-act="nav" data-page="${it.id}">${ic(it.icon)}<span>${it.label}</span></div>`).join('')).join('')}
+    <div class="sb-foot">Buddy Reward System · v3.8<br>All data stored locally in your browser.</div>`;
+}
+function go(page){
+  CURRENT=page;
+  try{
+    document.querySelectorAll('.sb-item').forEach(el=>el.classList.toggle('active',el.dataset.page===page));
+    const meta=NAV.flatMap(g=>g.items).find(i=>i.id===page);
+    const t=$('#tb-title'),k=$('#tb-kicker');
+    if(page==='evdetail'){
+      if(t)t.textContent='Evaluation Detail';
+      if(k)k.textContent='Evaluations';
+    }else if(page==='buddetail'){
+      if(t)t.textContent='Buddy Details';
+      if(k)k.textContent='People';
+    }else if(meta){
+      if(t)t.textContent=meta.label.replace(' · ',' — ');
+      if(k)k.textContent=meta.group;
+    }
+  }catch(err){console.error('[BRS] chrome update',err)}
+  render(page);
+  try{
+    const sb=$('#sidebar');if(sb)sb.classList.remove('open');
+    window.scrollTo({top:0});
+  }catch(err){}
+}
+function render(page){
+  const el=$('#pages');
+  let permKey=PAGE_PERM[page];
+  if(page==='evdetail'){
+    const k=(FS.evDetail||{}).kind;
+    permKey=evPermOf(k||'mgr');
+  }else if(page==='buddetail'){
+    permKey='buddies';
+  }
+  if(permKey&&!hasPerm(permKey)){
+    if(el)el.innerHTML=deniedPage(permKey);
+    refreshIcons();
+    return;
+  }
+  const R={welcome:rWelcome,dashboard:rDashboard,buddies:rBuddies,employees:rEmployees,history:rHistory,
+    rf_emp:()=>rFactors('emp'),rf_mgr:()=>rFactors('mgr'),rf_hr:()=>rFactors('hr'),
+    ev_emp:rEvEmp,ev_mgr:rEvMgr,ev_hr:rEvHr,evdetail:rEvDetail,buddetail:rBudDetail,
+    tiers:rTiers,sections:rSections,backup:rBackup,users:rUsers,settings:rSettings};
+  let html='';
+  try{
+    html=`<section class="page">${(R[page]||rWelcome)()}</section>`;
+  }catch(err){
+    console.error('[BRS] render failed for '+page,err);
+    html=`<section class="page">${pageHead('Something went wrong','The "'+esc(page)+'" page could not be rendered — your data is safe and other pages still work.')}
+      <div class="panel err-card"><div class="panel-b"><b>Error:</b>
+      <code>${esc(err&&err.message?err.message:String(err))}</code>
+      <p class="t-dim" style="margin-top:10px">If this keeps happening, go to <b>Backup → Reset to seed data</b>.</p></div></div></section>`;
+  }
+  if(el)el.innerHTML=html;
+  refreshIcons();
+}
+function deniedPage(permKey){
+  const p=PERMS.find(x=>x.key===permKey);
+  return `<section class="page">${pageHead('Access denied','Your account does not have permission for this area.')}
+    <div class="panel"><div class="panel-b" style="text-align:center;padding:44px 20px">
+      ${ic('lock')}
+      <p style="margin:12px 0 4px;font-size:15px"><b>Permission required:</b> ${p?esc(p.label):esc(permKey||'—')}</p>
+      <p class="t-dim" style="margin-bottom:18px">This tab is not ticked for your account. Ask an administrator to tick it for you in <b>User Management</b>.</p>
+      <button class="btn" data-act="nav" data-page="welcome">${ic('home')}Back to Home</button>
+    </div></div></section>`;
+}
+
+/* =========================================================
+   SHARED UI PIECES
+   ========================================================= */
+function toast(msg,icon='circle-check'){
+  const root=$('#toastRoot');if(!root)return;
+  const t=document.createElement('div');t.className='toast';
+  t.innerHTML=ic(icon)+`<span>${esc(msg)}</span>`;
+  root.appendChild(t);refreshIcons();
+  setTimeout(()=>{t.classList.add('out');setTimeout(()=>t.remove(),320)},3200);
+}
+function openModal({title,body,footer,lg}){
+  const root=$('#modalRoot');if(!root)return;
+  root.innerHTML=`<div class="overlay" data-ov="1"><div class="modal${lg?' lg':''}">
+    <div class="modal-h"><h3>${title}</h3><button class="icon-btn" data-act="modal-close">${ic('x')}</button></div>
+    <div class="modal-b">${body}</div>${footer?`<div class="modal-f">${footer}</div>`:''}</div></div>`;
+  refreshIcons();
+}
+function closeModal(){const r=$('#modalRoot');if(r)r.innerHTML=''}
+function confirmDlg(title,msg,okLabel,cb,brass){
+  openModal({title,body:`<p class="confirm-msg">${msg}</p>`,
+    footer:`<button class="btn ghost" data-act="modal-close">Cancel</button>
+            <button class="btn ${brass?'brass':'danger'}" id="cf-ok">${okLabel}</button>`});
+  const ok=$('#cf-ok');if(ok)ok.onclick=()=>{closeModal();cb()};
+}
+function burst(x,y){
+  if(x==null||y==null)return;
+  for(let i=0;i<16;i++){
+    const s=document.createElement('span');
+    s.className='pt'+(i%4===0?' bar':'');
+    s.style.left=x+'px';s.style.top=y+'px';
+    document.body.appendChild(s);
+    const a=Math.random()*Math.PI*2,r=40+Math.random()*70;
+    s.animate([{transform:'translate(0,0) scale(1)',opacity:1},
+      {transform:`translate(${Math.cos(a)*r}px,${Math.sin(a)*r-24}px) scale(.15)`,opacity:0}],
+      {duration:650+Math.random()*350,easing:'cubic-bezier(.2,.7,.3,1)'}).onfinish=()=>s.remove();
+  }
+}
+function pageHead(title,sub,actions=''){
+  return `<div class="page-head"><div><h2>${title}</h2><p>${sub}</p></div><div class="spacer"></div>${actions}</div>`;
+}
+function emptyBox(msg,icon='info'){
+  return `<div class="empty">${ic(icon)}<div>${msg}</div></div>`;
+}
+const awardBtn=()=>hasPerm('award')?`<button class="btn brass" data-act="award-open">${ic('award')}Award points</button>`:'';
+
+/* =========================================================
+   LIVE CLOCK — top bar + home hero
+   ========================================================= */
+function tickClock(){
+  try{
+    const n=new Date();
+    const hh=String(n.getHours()).padStart(2,'0');
+    const mm=String(n.getMinutes()).padStart(2,'0');
+    const ss=String(n.getSeconds()).padStart(2,'0');
+    const t=`${hh}:${mm}:${ss}`;
+    const tb=$('#tb-clock');if(tb)tb.textContent=t;
+    const hc=$('#hc-time');if(hc)hc.textContent=t;
+  }catch(e){}
+}
+setInterval(tickClock,1000);
+
+/* =========================================================
+   PAGE: HOME — animated logo halo + live clock
+   ========================================================= */
+function rWelcome(){
+  const first=USER.name.split(' ')[0];
+  const h=new Date().getHours(), greet=h<12?'morning':h<18?'afternoon':'evening';
+  const totalPts=DB.history.reduce((a,h)=>a+h.points,0);
+  const toBuddies=DB.history.filter(h=>h.buddyId).reduce((a,h)=>a+h.points,0);
+  const activeB=DB.buddies.filter(b=>b.status==='active').length;
+  const achieved=DB.buddyPeople.filter(b=>achievedTierOf(b.id)).length;
+  const recent=[...DB.history].filter(h=>h.points>0).sort((a,b)=>b.date.localeCompare(a.date)).slice(0,6);
+  const heroMark=DB.settings.logo
+    ?`<span class="hero-logo"><img src="${DB.settings.logo}" alt="Company logo"></span>`
+    :rosette(210,'#FFC82E','#1E3FBE',true);
+  const n=new Date();
+  const dateStr=n.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+  return `
+  <div class="welcome-hero">
+    <div>
+      <div class="kick org-cap">${ORG()} · ${esc(DB.settings.programName)} Program</div>
+      <h1>Good ${greet}, ${esc(first)}.</h1>
+      <div class="hero-clock"><i data-lucide="clock"></i><b id="hc-time">--:--:--</b><small>${esc(dateStr)}</small></div>
+      <p>Recognize the colleagues who make the work lighter. Every point earned by an employee is redirected to their assigned buddy — and all points, from every evaluation period and awards, count toward every tier.</p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        ${hasPerm('award')?`<button class="btn brass" data-act="award-open">${ic('award')}Award ${esc(DB.settings.pointName)}</button>`:''}
+        ${hasPerm('dashboard')?`<button class="btn ghost" style="border-color:rgba(255,255,255,.35);color:#EEF1FE" data-act="nav" data-page="dashboard">${ic('layout-dashboard')}Open dashboard</button>`:''}
+      </div>
+    </div>
+    <div class="seal-wrap"><span class="halo"></span>${heroMark}</div>
+  </div>
+  <div class="steps">
+    <div><div class="num">01</div><h4>Nominate</h4><p>Peers and managers award ${esc(DB.settings.pointName).toLowerCase()} — every employee's points are redirected to their assigned buddy.</p></div>
+    <div><div class="num">02</div><h4>Review</h4><p>Give Points unlocks with service milestones and locks as Evaluation Done once given, per evaluation period.</p></div>
+    <div><div class="num">03</div><h4>Achieve</h4><p>All points count toward every tier — a tier is achieved when total points meet its minimum and its eligible evaluation is done.</p></div>
+  </div>
+  <div class="stat-strip">
+    <div><b>${DB.employees.length}</b><span>Employees</span></div>
+    <div><b>${DB.buddyPeople.length}</b><span>Buddies</span></div>
+    <div><b>${activeB}</b><span>Active buddy pairs</span></div>
+    <div><b>${totalPts.toLocaleString()}</b><span>${esc(DB.settings.pointName)} awarded</span></div>
+    <div><b>${toBuddies.toLocaleString()}</b><span>Redirected to buddies</span></div>
+    <div><b>${achieved}<span style="font-size:16px;color:var(--muted)">/${DB.buddyPeople.length}</span></b><span>Buddies achieved a tier</span></div>
+  </div>
+  <div style="height:18px"></div>
+  <div class="panel"><div class="panel-h"><h3>Recent activity</h3><span class="sub">latest ${esc(DB.settings.pointName)}</span>
+    <span style="flex:1"></span>${hasPerm('history')?`<button class="btn ghost sm" data-act="nav" data-page="history">View all ${ic('arrow-right')}</button>`:''}</div>
+    <div class="panel-b" style="padding-top:8px">
+      <ul class="tl">${recent.map(h=>{const e=empById(h.empId);const b=h.buddyId?budById(h.buddyId):null;
+        return `<li><span class="dot"></span>
+        <span><b>${esc(e?e.name:'Unknown')}</b> earned <b style="color:var(--yellow-ink)">+${h.points}</b> — ${esc(h.type)}${b?` <span class="t-dim">· credited to buddy ${esc(b.name)}</span>`:''} <span class="t-dim">by ${esc((empById(h.by)||{}).name||'System')}</span></span>
+        <time>${fmtDate(h.date)}</time></li>`}).join('')}</ul>
+    </div></div>`;
+}
+
+/* =========================================================
+   PAGE: DASHBOARD
+   ========================================================= */
+function last6Months(){
+  const arr=[],now=new Date();
+  for(let i=5;i>=0;i--){const d=new Date(now.getFullYear(),now.getMonth()-i,1);
+    arr.push({key:d.toISOString().slice(0,7),label:d.toLocaleString('en-US',{month:'short'}),total:0});}
+  return arr;
+}
+function barChartSVG(){
+  const months=last6Months();
+  DB.history.forEach(h=>{const m=months.find(m=>m.key===h.date.slice(0,7));if(m)m.total+=h.points;});
+  const max=Math.max(...months.map(m=>m.total),100);
+  const W=640,H=230,pt=22,pb=30,step=(W-16)/6,bw=step*.5;
+  let bars='',grid='';
+  for(let g=1;g<=3;g++){const y=pt+(H-pt-pb)*(1-g/3.4);
+    grid+=`<line x1="6" x2="${W-6}" y1="${y}" y2="${y}" stroke="#DDE2F1" stroke-dasharray="3 5"/>`;}
+  months.forEach((m,i)=>{
+    const bh=Math.max((m.total/max)*(H-pt-pb),m.total>0?4:2);
+    const x=8+i*step+(step-bw)/2,y=H-pb-bh,cx=8+i*step+step/2,cur=i===5;
+    bars+=`<rect x="${x}" y="${y}" width="${bw}" height="${bh}" rx="7" fill="${cur?'#E8AE00':'#1E3FBE'}" opacity="${cur?1:.92}"><title>${m.label}: ${m.total} pts</title></rect>
+      ${m.total>0?`<text x="${cx}" y="${y-7}" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1A2450" font-family="Instrument Sans">${m.total}</text>`:''}
+      <text x="${cx}" y="${H-9}" text-anchor="middle" font-size="12" fill="#5A678F" font-family="Instrument Sans">${m.label}</text>`;
+  });
+  return `<svg class="chart-svg" viewBox="0 0 ${W} ${H}">${grid}${bars}</svg>`;
+}
+function donutSVG(){
+  const counts=DB.tiers.map(t=>({...t,n:DB.buddyPeople.filter(b=>{const a=achievedTierOf(b.id);return a&&a.id===t.id}).length}));
+  const total=counts.reduce((a,c)=>a+c.n,0);
+  const C=2*Math.PI*54;let off=0,segs='';
+  counts.filter(c=>c.n>0).forEach(c=>{const len=c.n/Math.max(total,1)*C;
+    segs+=`<circle r="54" cx="70" cy="70" fill="none" stroke="${c.color}" stroke-width="22" stroke-dasharray="${Math.max(len-2,1)} ${C-len+2}" stroke-dashoffset="${-off}" transform="rotate(-90 70 70)"/>`;
+    off+=len;});
+  return {svg:`<svg viewBox="0 0 140 140" width="150" height="150">${segs}
+    <text x="70" y="67" text-anchor="middle" font-size="24" font-weight="700" fill="#1A2450" font-family="Fraunces,serif">${total}</text>
+    <text x="70" y="86" text-anchor="middle" font-size="9" letter-spacing="2" fill="#5A678F" font-family="Instrument Sans">ACHIEVED</text></svg>`,
+    legend:counts.map(c=>`<li><span class="sw" style="background:${c.color}"></span>${esc(c.name)}<b>${c.n}</b></li>`)
+      +`<li><span class="sw" style="background:#E7EBF7"></span>Not achieved<b>${DB.buddyPeople.length-total}</b></li>`};
+}
+function rDashboard(){
+  const ranked=DB.buddyPeople.map(b=>({b,p:buddyPointsOf(b.id),t:achievedTierOf(b.id)})).sort((a,b)=>b.p-a.p.p).slice(0,5);
+  const recent=[...DB.history].filter(h=>h.points>0).sort((a,b)=>b.date.localeCompare(a.date)).slice(0,5);
+  const donut=donutSVG();
+  const activeB=DB.buddies.filter(b=>b.status==='active').length;
+  const evDone=DB.employees.filter(e=>aggStatus((DB.evaluations[e.id]||{}).mgr)==='submitted').length;
+  const evPct=Math.round(evDone/Math.max(DB.employees.length,1)*100);
+  const facTotal=['emp','mgr','hr'].reduce((a,k)=>a+DB.factors[k].length,0);
+  const totalPts=DB.history.reduce((a,h)=>a+h.points,0);
+  return `
+  ${pageHead('Program dashboard','Pulse of the '+esc(DB.settings.programName)+' program · '+esc(DB.settings.period),awardBtn())}
+  <div class="stat-strip" style="margin-bottom:18px">
+    <div><b>${totalPts.toLocaleString()}</b><span>Total points</span></div>
+    <div><b>${DB.history.filter(h=>h.points>0).length}</b><span>Awards given</span></div>
+    <div><b>${activeB}</b><span>Buddy pairs</span></div>
+    <div><b>${facTotal}</b><span>Factors across all sets</span></div>
+  </div>
+  <div class="grid-dash">
+    <div class="panel g8"><div class="panel-h"><h3>Points awarded — last 6 months</h3></div>
+      <div class="panel-b">${barChartSVG()}</div></div>
+    <div class="panel g4"><div class="panel-h"><h3>Tiers achieved</h3></div>
+      <div class="panel-b"><div class="donut-wrap">${donut.svg}<ul class="legend">${donut.legend}</ul></div></div></div>
+    <div class="panel g4"><div class="panel-h"><h3>Top buddies by points</h3></div>
+      <div class="panel-b" style="padding-top:6px"><ul class="rank">${ranked.map((r,i)=>
+        `<li><span class="pos">${i+1}</span>${avatar(r.b,32)}<span><b style="font-size:13.5px;font-weight:600">${esc(r.b.name)}</b><br><small class="t-dim">${esc(secName(r.b.section))}</small></span><span style="margin-left:8px">${r.t?`<span class="badge" style="background:${r.t.color}1C;color:${r.t.color}">${esc(r.t.name)}</span>`:'<span class="t-dim">no tier yet</span>'}</span><span class="pts">${r.p} pts</span></li>`).join('')||emptyBox('No buddies yet.','handshake')}</ul></div></div>
+    <div class="panel g5"><div class="panel-h"><h3>Recent rewards</h3><span style="flex:1"></span>
+      ${hasPerm('history')?`<button class="btn ghost sm" data-act="nav" data-page="history">All history</button>`:''}</div>
+      <div class="panel-b" style="padding-top:6px"><ul class="mini-list">${recent.map(h=>{const e=empById(h.empId);const b=h.buddyId?budById(h.buddyId):null;
+        return `<li>${avatar(b||e||{name:'?'},30)}<span><b>${esc(b?b.name:(e?e.name:'—'))}</b>${b?` <span class="t-dim">← ${esc((e||{}).name||'?')}</span>`:''}<br><small class="t-dim">${esc(h.type)}</small></span><span class="pts">+${h.points}</span></li>`}).join('')||emptyBox('No rewards yet.','medal')}</ul></div></div>
+    <div class="panel g3"><div class="panel-h"><h3>Program health</h3></div>
+      <div class="panel-b">
+        <div class="meter"><div class="m-top"><b>Employee reviews in</b><span>${evPct}%</span></div><div class="m-bar"><span class="brass" style="width:${evPct}%"></span></div></div>
+        <div class="meter" style="margin-bottom:4px"><div class="m-top"><b>Factor sets filled</b><span>${['emp','mgr','hr'].filter(k=>DB.factors[k].length).length}/3</span></div><div class="m-bar"><span style="width:${Math.round(['emp','mgr','hr'].filter(k=>DB.factors[k].length).length/3*100)}%"></span></div></div>
+      </div></div>
+  </div>`;
+}
+
+/* =========================================================
+   PAGE: BUDDIES
+   ========================================================= */
+function rBuddies(){
+  const canB=hasPerm('buddies');
+  const pairRows=DB.buddies.map(p=>{
+    const e=empById(p.empId),b=budById(p.buddyId);
+    if(!e||!b)return '';
+    const at=achievedTierOf(b.id);
+    return `<div class="pair">
+      <div class="who" style="text-align:right">${avatar(e,40)}<b style="margin-top:6px">${esc(e.name)}</b><small>Employee · ${esc(secName(e.section))}</small></div>
+      <div class="link">${ic('handshake')}<span>buddies</span></div>
+      <div class="who">${avatar(b,40)}<b style="margin-top:6px">${esc(b.name)}</b><small>Buddy · ${esc(secName(b.section))} · ${esc(b.code)}</small></div>
+      <div class="meta">
+        <span class="badge ${p.status==='active'?'b-ok':'b-mute'}">${p.status==='active'?'Active':'Ended'}</span>
+        <span class="since">Since ${fmtDate(p.since)}<br><b style="color:var(--yellow-ink)">${buddyPointsOf(b.id)} pts</b> credited from ${esc(e.name)}</span>
+        ${at?`<span class="badge" style="background:${at.color}1C;color:${at.color}">${ic('medal')}${esc(at.name)}</span>`:''}
+        ${p.status==='active'&&canB?`<button class="btn danger sm" data-act="buddy-end" data-id="${p.id}">End pairing</button>`:''}
+      </div></div>`;
+  }).join('');
+  const rosterRows=DB.buddyPeople.map(b=>{
+    const sec=secById(b.section),pr=activePairingOfBuddy(b.id),pe=pr?empById(pr.empId):null;
+    const sd=pe?daysSince(pe.joinDate):null;
+    const pts=buddyPointsOf(b.id);
+    const at=achievedTierOf(b.id);
+    const hint=at?null:nextTierHint(b.id);
+    return `<tr>
+      <td><span style="display:flex;align-items:center;gap:11px">${avatar(b,32)}
+        <span><span class="t-strong">${esc(b.name)}</span><br><small class="t-dim">added ${fmtDate(b.added)}</small></span></span></td>
+      <td class="t-dim">${esc(b.code)}</td>
+      <td>${esc(secName(b.section))}</td>
+      <td>${sec?`<span class="badge b-steel">${esc(depName(sec.dept))}</span>`:'<span class="badge b-mute">—</span>'}</td>
+      <td class="t-dim">${esc(b.contact)}</td>
+      <td>${pe?`<span class="badge b-buddy">${ic('handshake')}${esc(pe.name)}</span>${sd!=null?` <span class="t-dim" style="margin-left:6px">${sd} days</span>`:''}`:'<span class="t-dim">—</span>'}</td>
+      <td><b style="color:var(--yellow-ink)">${pts}</b></td>
+      <td>${at
+        ?tierChipIfAchieved(b.id)
+        :`<span class="t-dim">Not achieved${hint?`<br><small>Next: ${esc(hint.tier.name)} · ${esc(hint.need)}</small>`:''}</span>`}</td>
+      <td style="text-align:right;white-space:nowrap">
+        <button class="btn sm ghost" data-act="bud-view" data-id="${b.id}" title="View details, charts & forecast">${ic('eye')}Details</button>
+        ${canB&&!pe?`<button class="btn sm" data-act="buddy-pair" data-id="${b.id}">${ic('link')}Pair</button>`:''}
+        ${canB?`<button class="icon-btn" data-act="buddy-del" data-id="${b.id}" title="Remove from roster">${ic('trash-2')}</button>`:''}</td></tr>`}).join('');
+  return pageHead('Buddies','Buddies are program mentors — kept separate from employees. ALL points count toward every tier; use Details for the full ladder, charts and forecast.',
+    canB?`<button class="btn" data-act="buddy-add">${ic('user-plus')}Add Buddies</button>`:'')
+    +`<div class="panel">
+      <div class="panel-h"><h3>Employee ↔ Buddy pairings</h3><span class="sub">assign from the Employees page or the Pair button below</span></div>
+      ${pairRows||emptyBox('No pairings yet — pair a buddy with an employee to get started.','handshake')}
+    </div>
+    <div class="panel" style="margin-top:18px">
+      <div class="panel-h"><h3>Buddy roster</h3><span class="sub">${DB.buddyPeople.length} registered buddies · tier shown only when achieved</span></div>
+      ${rosterRows?`<div class="tbl-wrap"><table class="tbl">
+        <thead><tr><th>Buddy</th><th>EMP No</th><th>Section</th><th>Department</th><th>Contact number</th><th>Paired with</th><th>Points</th><th>Tier (achieved)</th><th style="text-align:right">Actions</th></tr></thead>
+        <tbody>${rosterRows}</tbody></table></div>`
+      :emptyBox('No buddies added yet — use "Add Buddies" to register one with EMP No, name, section and contact.','user-plus')}
+    </div>`;
+}
+
+/* =========================================================
+   PAGE: EMPLOYEES
+   ========================================================= */
+function rEmployees(){
+  const canE=hasPerm('employees');
+  const q=FS.empQ.toLowerCase();
+  const list=DB.employees.filter(e=>
+    (FS.empSec==='all'||e.section===FS.empSec)&&
+    (!q||e.name.toLowerCase().includes(q)||e.code.toLowerCase().includes(q)||e.title.toLowerCase().includes(q)));
+  return pageHead('Employees','Everyone currently enrolled in the program — all points they earn are redirected to their assigned buddy.',
+    canE?`<button class="btn" data-act="emp-add">${ic('plus')}Add employee</button>`:'')
+  +`<div class="toolbar">
+      <div style="position:relative"><input class="inp" style="padding-left:34px;min-width:230px" placeholder="Search name, code, title…" value="${esc(FS.empQ)}" oninput="empSearch(this.value)">
+      <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted)">${ic('search')}</span></div>
+      <select class="inp" onchange="empSecFilter(this.value)">
+        <option value="all">All sections</option>
+        ${DB.sections.map(s=>`<option value="${s.id}" ${FS.empSec===s.id?'selected':''}>${esc(s.name)}</option>`).join('')}
+      </select>
+      <div class="spacer"></div><span class="t-dim">${list.length} of ${DB.employees.length}</span>
+    </div>
+    <div class="panel"><div class="tbl-wrap"><table class="tbl">
+      <thead><tr><th>Employee</th><th>Code</th><th>Section</th><th>Title</th><th>Buddy</th><th>Joined</th><th>Points → Buddy</th>${canE?'<th style="text-align:right">Actions</th>':''}</tr></thead>
+      <tbody>${list.map(e=>{const pr=activePairingOf(e.id);const bp=pr?budById(pr.buddyId):null;
+        const kept=pointsOf(e.id);
+        return `<tr>
+        <td><span style="display:flex;align-items:center;gap:11px">${avatar(e,34)}<span><span class="t-strong">${esc(e.name)}</span><br><small class="t-dim">${esc(e.email||'')}</small></span></span></td>
+        <td class="t-dim">${esc(e.code)}</td><td>${esc(secName(e.section))}</td><td>${esc(e.title)}</td>
+        <td>${bp?`<span style="display:inline-flex;align-items:center;gap:6px"><span style="color:var(--yellow-ink)">${ic('handshake')}</span>${esc(bp.name)}</span>`:'<span class="t-dim">— none —</span>'}</td>
+        <td class="t-dim">${fmtDate(e.joinDate)}</td>
+        <td>${bp?`<span style="display:inline-flex;align-items:center;gap:6px"><span style="color:var(--yellow-ink)">${ic('corner-down-right')}</span><b>${buddyPointsOf(bp.id)}</b> <span class="t-dim">pts → ${esc(bp.name)}</span></span>`
+          :(kept>0?`<b>${kept}</b> <span class="t-dim">pts kept · no buddy</span>`:'<span class="t-dim">—</span>')}</td>
+        ${canE?`<td style="text-align:right;white-space:nowrap">
+          <button class="icon-btn" data-act="emp-edit" data-id="${e.id}" title="Edit">${ic('pencil')}</button>
+          <button class="icon-btn" data-act="emp-del" data-id="${e.id}" title="Remove">${ic('trash-2')}</button></td>`:''}</tr>`}).join('')}
+      </tbody></table></div>${list.length?'':emptyBox('No employees match your filters.','search')}</div>`;
+}
+
+/* =========================================================
+   PAGE: REWARD HISTORY
+   ========================================================= */
+function rHistory(){
+  const list=DB.history.filter(h=>
+    (FS.histEmp==='all'||h.empId===FS.histEmp)&&(FS.histType==='all'||h.type===FS.histType)&&h.points>0)
+    .sort((a,b)=>b.date.localeCompare(a.date));
+  const total=list.reduce((a,h)=>a+h.points,0);
+  const typeBadge=t=>({'Manager Award':'b-steel','Peer Nomination':'b-ok','Spot Bonus':'b-warn','Milestone':'b-mute','HR Recognition':'b-bad','Evaluation Points':'b-steel','Buddy Evaluation Points':'b-steel'}[t]||'b-mute');
+  if(!DB.history.length){
+    return pageHead('Reward history','Every point ever awarded appears in this ledger.',awardBtn())
+    +`<div class="panel">${emptyBox('Reward history is empty — points you award or give through evaluations will be credited here.','medal')}</div>`;
+  }
+  return pageHead('Reward history',
+    `Every point ever awarded, in one ledger — all points count toward every tier. Currently ${list.length} entries · ${total} points.`,
+    `${hasPerm('history')?`<button class="btn danger" data-act="hist-clear" title="Remove all reward entries from the ledger">${ic('eraser')}Clear History</button>`:''}
+     ${awardBtn()}`)
+  +`<div class="toolbar">
+      <select class="inp" onchange="histEmpFilter(this.value)"><option value="all">All employees</option>${empOpts(FS.histEmp)}</select>
+      <select class="inp" onchange="histTypeFilter(this.value)">
+        ${['all','Peer Nomination','Manager Award','Spot Bonus','Milestone','HR Recognition','Evaluation Points','Buddy Evaluation Points'].map(t=>`<option value="${t}" ${FS.histType===t?'selected':''}>${t==='all'?'All types':t}</option>`).join('')}
+      </select><div class="spacer"></div><span class="t-dim">${list.length} entries · ${total} points</span></div>
+    <div class="panel"><div class="tbl-wrap"><table class="tbl">
+      <thead><tr><th>Date</th><th>Employee</th><th>Type</th><th>Points</th><th>Credited to</th><th>Period</th><th>Awarded by</th><th>Note</th></tr></thead>
+      <tbody>${list.map(h=>{const e=empById(h.empId);const b=h.buddyId?budById(h.buddyId):null;return `<tr>
+        <td class="t-dim" style="white-space:nowrap">${fmtDate(h.date)}</td>
+        <td><span style="display:flex;align-items:center;gap:10px">${avatar(e||{name:'?'},30)}<span class="t-strong">${esc(e?e.name:'—')}</span></span></td>
+        <td><span class="badge ${typeBadge(h.type)}">${esc(h.type)}</span></td>
+        <td><b style="color:var(--yellow-ink)">+${h.points}</b></td>
+        <td>${b?`<span class="badge b-buddy">${ic('handshake')}${esc(b.name)}</span>`:'<span class="t-dim">kept by employee</span>'}</td>
+        <td class="t-dim" style="white-space:nowrap">${h.evalPeriod?esc(h.evalPeriod.replace(' Evaluation','')):'—'}</td>
+        <td class="t-dim">${esc((empById(h.by)||{}).name||'System')}</td>
+        <td class="t-dim" style="max-width:220px">${esc(h.note)}</td></tr>`}).join('')}
+      </tbody></table></div>${list.length?'':emptyBox('No rewards match your filters.','medal')}</div>`;
+}
+
+/* =========================================================
+   PAGES: REWARD FACTORS
+   ========================================================= */
+function rFactors(stage){
+  const stageName=STAGE_NAMES[stage];
+  const set=DB.factors[stage];
+  const canAdd=hasPerm('rf_'+stage);
+  const needRole=stage==='mgr'?'Manager':stage==='hr'?'HR':null;
+  const ptsTotal=setMaxTotal(stage);
+  const rows=set.length?set.map(f=>`
+    <div class="fac-row"><div class="fac-main">
+      <div class="fac-title">${esc(f.title)}
+        <span class="wgt" title="Maximum Allocated Points">${+f.maxPoints||0} pts max</span>
+        <span class="badge b-steel" style="font-size:10.5px" title="Evaluation Period — shown only on this period's Give Points page">${ic('calendar')}<span>${esc(f.evalPeriod)}</span></span>
+      </div>
+      <div class="fac-desc">${esc(f.desc)}</div></div>
+      <div class="fac-side">
+        <button class="icon-btn" data-act="fac-edit" data-stage="${stage}" data-id="${f.id}" title="Edit factor" ${canAdd?'':'disabled style="opacity:.4;cursor:not-allowed"'}>${ic('pencil')}</button>
+        <button class="icon-btn" data-act="fac-del" data-stage="${stage}" data-id="${f.id}" title="Delete factor" ${canAdd?'':'disabled style="opacity:.4;cursor:not-allowed"'}>${ic('trash-2')}</button>
+      </div></div>`).join('')
+  :emptyBox(`No factors in the ${stageName} review set yet — use "Add Factor" to create the first one. Factors here are fully independent from the other review tabs.`,'list-checks');
+  return `
+  ${pageHead(`Reward factors — ${stageName} review`,`This tab holds its OWN separate factor set — ${set.length} factor${set.length===1?'':'s'} · ${ptsTotal} ${esc(DB.settings.pointName)} allocated. Each factor appears ONLY on the Give Points page of its assigned Evaluation Period.`,
+    `<button class="btn brass" data-act="fac-add" data-stage="${stage}" ${canAdd?'':'disabled style="opacity:.5;cursor:not-allowed"'}>${ic('plus')}Add Factor</button>`)}
+  ${!canAdd?`<div class="note warn">${ic('lock')}<span>You don't have the <b>${esc(PERM_LABEL['rf_'+stage])}</b> permission ticked, so you can view these factors but not add, edit or delete them.${needRole?` By default this tick belongs to the ${needRole} role.`:''}</span></div>`
+    :`<div class="note">${ic('corner-down-right')}<span>Points given through these factors are <b>redirected to the evaluated person's assigned buddy</b> and count toward every tier.</span></div>`}
+  <div class="panel">${rows}</div>`;
+}
+
+/* =========================================================
+   PAGES: EMPLOYEE EVALUATION
+   ========================================================= */
+const noFactorsNote=stage=>`<div class="note warn">${ic('info')}<span>No factors are defined in the <b>Reward Factors — ${STAGE_NAMES[stage]} review</b> tab yet. Add factors there (Add Factor) before running these evaluations.</span></div>`;
+const NO_BUDDIES_NOTE=`<div class="note warn">${ic('info')}<span>No buddies registered yet — use <b>Buddies → Add Buddies</b> to add buddies first.</span></div>`;
+const NO_EMPLOYEES_NOTE=`<div class="note warn">${ic('info')}<span>No employees yet — add employees in the <b>Employees</b> tab first.</span></div>`;
+const GATING_NOTE=`<div class="note">${ic('calendar-clock')}<span><b>Give Points unlocks with the service period:</b>
+  01st &gt; 90 days · 02nd &gt; 150 · 03rd &gt; 210 · 04th &gt; 270 · Final &gt; 365.
+  For buddies this is their <b>assigned employee's</b> service; for employees it is their <b>own</b> service since join date.
+  Once points are given for a period, the button deactivates and shows the <b>Evaluation Done</b> symbol. All points are <b>redirected to the assigned buddy</b> and count toward every tier.</span></div>`;
+const scoreCell=(store,stage)=>{
+  const maxT=setMaxTotal(stage);
+  if(!maxT)return '<span class="t-dim">—</span>';
+  const pts=storeTotal(store);
+  return pts>0?`<b>${pts}</b> <span class="t-dim">/ ${maxT} pts</span>`:'<span class="t-dim">—</span>';
+};
+
+function rEvEmp(){
+  const ok=hasPerm('ev_emp');
+  const rows=DB.buddyPeople.map(b=>{
+    const store=DB.buddyEvals[b.id];
+    const st=aggStatus(store), dc=doneCount(store);
+    const ae=buddyAssigned(b.id), sd=ae?daysSince(ae.joinDate):null;
+    const label=dc===EVAL_PERIODS.length?'View':(st==='pending'?'Evaluate':'Continue');
+    return `<tr>
+      <td><span style="display:flex;align-items:center;gap:10px">${avatar(b,30)}<span class="t-strong">${esc(b.name)}</span></span></td>
+      <td class="t-dim">${esc(b.code)}</td>
+      <td>${esc(secName(b.section))}</td>
+      <td>${secById(b.section)?`<span class="badge b-steel">${esc(depName(secById(b.section).dept))}</span>`:'—'}</td>
+      <td>${ae?`<span class="t-dim">${esc(ae.name)}</span> ${serviceBadge(sd)}`:'<span class="t-dim">— none —</span>'}</td>
+      <td>${statusBadge(st)}</td>
+      <td>${scoreCell(store,'emp')}</td>
+      <td style="text-align:right;white-space:nowrap">
+        <button class="btn sm ${ok?'':'ghost'}" data-act="eval-open" data-kind="buddy" data-id="${b.id}" ${ok?'':'disabled style="opacity:.5;cursor:not-allowed"'}>${ic('pen-line')}${label}</button></td></tr>`}).join('');
+  return `
+  ${pageHead('Employee evaluation — self review','All registered Buddies — scored against the separate EMPLOYEE factor set, period by period. Give Points unlocks with the assigned employee\'s service period.')}
+  ${!DB.factors.emp.length?noFactorsNote('emp'):''}
+  ${!DB.buddyPeople.length?NO_BUDDIES_NOTE:''}
+  ${GATING_NOTE}
+  ${!ok?`<div class="note warn">${ic('lock')}<span>You don't have the <b>Evaluation · Employee (Self review)</b> permission ticked, so Evaluate actions are locked.</span></div>`:''}
+  <div class="panel"><div class="tbl-wrap"><table class="tbl">
+    <thead><tr><th>Buddy</th><th>EMP No</th><th>Section</th><th>Department</th><th>Assigned employee · service</th><th>Status</th><th>Points</th><th style="text-align:right">Action</th></tr></thead>
+    <tbody>${rows}</tbody></table></div>${DB.buddyPeople.length?'':emptyBox('Buddies will appear here once added.','handshake')}</div>`;
+}
+function rEvMgr(){
+  const ok=hasPerm('ev_mgr');
+  const rows=DB.employees.map(e=>{
+    const store=(DB.evaluations[e.id]||{}).mgr;
+    const st=aggStatus(store), dc=doneCount(store);
+    const sd=daysSince(e.joinDate);
+    const label=dc===EVAL_PERIODS.length?'View':(st==='pending'?'Evaluate':'Continue');
+    return `<tr>
+      <td><span style="display:flex;align-items:center;gap:10px">${avatar(e,30)}<span class="t-strong">${esc(e.name)}</span></span></td>
+      <td class="t-dim">${esc(e.code)}</td>
+      <td>${esc(secName(e.section))}</td>
+      <td>${esc(e.title)}</td>
+      <td>${serviceBadge(sd)}</td>
+      <td>${statusBadge(st)}</td>
+      <td>${scoreCell(store,'mgr')}</td>
+      <td style="text-align:right;white-space:nowrap">
+        <button class="btn sm ${ok?'':'ghost'}" data-act="eval-open" data-kind="mgr" data-id="${e.id}" ${ok?'':'disabled style="opacity:.5;cursor:not-allowed"'}>${ic('clipboard-list')}${label}</button></td></tr>`}).join('');
+  return `
+  ${pageHead('Employee evaluation — manager review','All Employees — scored against the separate MANAGER / SUPERVISOR factor set. Points earned are redirected to each employee\'s assigned buddy.')}
+  ${!DB.factors.mgr.length?noFactorsNote('mgr'):''}
+  ${!DB.employees.length?NO_EMPLOYEES_NOTE:''}
+  ${GATING_NOTE}
+  ${!ok?`<div class="note warn">${ic('lock')}<span>You don't have the <b>Evaluation · MGR/Sup.</b> permission ticked, so Evaluate actions are locked. By default this tick belongs to the Manager role.</span></div>`:''}
+  <div class="panel"><div class="tbl-wrap"><table class="tbl">
+    <thead><tr><th>Employee</th><th>Code</th><th>Section</th><th>Title</th><th>Service</th><th>Status</th><th>Points</th><th style="text-align:right">Action</th></tr></thead>
+    <tbody>${rows}</tbody></table></div>${DB.employees.length?'':emptyBox('Employees will appear here once added.','users')}</div>`;
+}
+function rEvHr(){
+  const ok=hasPerm('ev_hr');
+  const rows=DB.employees.map(e=>{
+    const rec=DB.evaluations[e.id]||{};
+    const store=rec.hrEval;
+    const st=aggStatus(store);
+    const sd=daysSince(e.joinDate);
+    return `<tr>
+      <td><span style="display:flex;align-items:center;gap:10px">${avatar(e,30)}<span class="t-strong">${esc(e.name)}</span></span></td>
+      <td class="t-dim">${esc(secName(e.section))}</td>
+      <td>${serviceBadge(sd)}</td>
+      <td>${statusBadge(st)}</td>
+      <td>${scoreCell(store,'hr')}</td>
+      <td>${rec.hr==='acked'?`<span class="badge b-ok">${ic('badge-check')}Acknowledged</span>`:'<span class="badge b-mute">Pending</span>'}</td>
+      <td style="text-align:right;white-space:nowrap">
+        <button class="btn sm ${ok?'':'ghost'}" data-act="eval-open" data-kind="hr" data-id="${e.id}" ${ok?'':'disabled style="opacity:.5;cursor:not-allowed"'}>${ic('shield-check')}${st==='pending'?'Evaluate':'Open'}</button>
+        ${ok&&st==='submitted'&&rec.hr!=='acked'
+          ?`<button class="btn sm brass" data-act="ev-hr-ack" data-id="${e.id}">Acknowledge</button>`:''}
+      </td></tr>`}).join('');
+  const acked=DB.employees.filter(e=>(DB.evaluations[e.id]||{}).hr==='acked').length;
+  return `
+  ${pageHead('Employee evaluation — HR review','All Employees — scored against the separate HR factor set. Points earned are redirected to each employee\'s assigned buddy.')}
+  ${!DB.factors.hr.length?noFactorsNote('hr'):''}
+  ${!DB.employees.length?NO_EMPLOYEES_NOTE:''}
+  ${GATING_NOTE}
+  ${!ok?`<div class="note warn">${ic('lock')}<span>You don't have the <b>Evaluation · HR</b> permission ticked, so Evaluate &amp; Acknowledge actions are locked. By default this tick belongs to the HR role.</span></div>`:''}
+  <div class="toolbar"><span class="badge b-ok">${acked} / ${DB.employees.length} acknowledged</span></div>
+  <div class="panel"><div class="tbl-wrap"><table class="tbl">
+    <thead><tr><th>Employee</th><th>Section</th><th>Service</th><th>HR review</th><th>Points</th><th>HR status</th><th style="text-align:right">Actions</th></tr></thead>
+    <tbody>${rows}</tbody></table></div>${DB.employees.length?'':emptyBox('Employees will appear here once added.','users')}</div>`;
+}
+
+/* =========================================================
+   PAGE: EVALUATION DETAIL
+   ========================================================= */
+function rEvDetail(){
+  const d=FS.evDetail||{};
+  const kind=d.kind||'mgr', id=d.id;
+  const stage=stageOfKind(kind);
+  let person=null, backPage='ev_mgr', backLabel='Manager review', roleLabel='Employee';
+  if(kind==='buddy'){
+    person=budById(id);backPage='ev_emp';backLabel='Self review';roleLabel='Buddy';
+  }else{
+    person=empById(id);
+    backPage=kind==='hr'?'ev_hr':'ev_mgr';
+    backLabel=kind==='hr'?'HR review':'Manager review';roleLabel='Employee';
+  }
+  if(!person)return pageHead('Evaluation detail','Record not found — it may have been removed.')
+    +`<div class="panel">${emptyBox('This person no longer exists. Go back and pick another.','circle-alert')}</div>
+      <div style="margin-top:14px"><button class="btn ghost" data-act="nav" data-page="${backPage}">${ic('arrow-left')}Back to ${backLabel}</button></div>`;
+  const store=storeFor(kind,id);
+  const done=doneCount(store);
+  const sec=secById(person.section);
+  const creditBuddy=kind==='buddy'?person:budById((activePairingOf(id)||{}).buddyId);
+  let assignedEmp=null;
+  if(kind==='buddy')assignedEmp=buddyAssigned(id);
+  const serviceDays=personServiceDays(kind,id);
+  function periodState(period){
+    const rec=store.periods[period];
+    if(rec&&rec.status==='submitted')return {mode:'done',rec};
+    const th=PERIOD_DAYS[period];
+    if(serviceDays==null){
+      const reason=kind==='buddy'
+        ?'No assigned employee — pair this buddy with an employee first'
+        :'No join date on record — set this employee\'s join date first';
+      return {mode:'locked',rec,reason};
+    }
+    if(!(serviceDays>th))return {mode:'locked',rec,reason:`Unlocks after ${th} days of service · ${Math.max(th-serviceDays,0)} days to go`};
+    return {mode:rec&&rec.status==='draft'?'draft':'open',rec};
+  }
+  let nextUnlock=null;
+  for(const p of EVAL_PERIODS){
+    const s=periodState(p);
+    if(s.mode==='locked'){nextUnlock={p,days:PERIOD_DAYS[p]-(serviceDays||0)};break;}
+  }
+  const rows=EVAL_PERIODS.map((period,i)=>{
+    const s=periodState(period);
+    const st=s.rec?s.rec.status:'pending';
+    const ppts=periodPts(s.rec);
+    const pMax=periodMax(stage,period);
+    const nFac=periodFactors(stage,period).length;
+    const doneRow=s.mode==='done';
+    let smallTxt=`${nFac} factor${nFac===1?'':'s'} assigned · max ${pMax} pts`;
+    if(doneRow)smallTxt=`Points given ${s.rec.date?fmtDate(s.rec.date):''} · ${ppts} / ${pMax} pts${creditBuddy?` · credited to ${creditBuddy.name}`:''}`;
+    else if(nFac===0)smallTxt='No factors assigned to this period — add factors with this Evaluation Period in the factor tab';
+    else if(s.mode==='draft')smallTxt=`Draft saved — continue to finish · ${nFac} factor${nFac===1?'':'s'} · max ${pMax} pts`;
+    else if(s.mode==='locked')smallTxt=s.reason;
+    let btn;
+    if(doneRow){
+      btn=`<button class="btn sm ghost" disabled style="opacity:.5;cursor:not-allowed">${ic('lock')}Give Points</button>${DONE_BADGE}`;
+    }else if(s.mode==='locked'||nFac===0){
+      const why=nFac===0?`No factors assigned to ${period}`:s.reason;
+      btn=`<button class="btn sm ghost" disabled style="opacity:.5;cursor:not-allowed" title="${esc(why)}">${ic('lock')}Give Points</button>`;
+    }else{
+      btn=`<button class="btn sm ${s.mode==='draft'?'brass':''}" data-act="ev-give" data-kind="${kind}" data-id="${id}" data-period="${period}">${ic('star')}${s.mode==='draft'?'Continue Points':'Give Points'}</button>`;
+    }
+    return `<div class="per-row ${period==='Final Evaluation'?'final':''} ${doneRow?'done':''}">
+      <span class="per-num">${doneRow?ic('check'):String(i+1).padStart(2,'0')}</span>
+      <div class="per-main"><b>${period}</b><small>${smallTxt}</small></div>
+      <div class="per-score">${doneRow?`<b>${ppts}</b> <span class="t-dim">/ ${pMax} pts</span>`:statusBadge(st)}</div>
+      ${btn}
+    </div>`}).join('');
+  return `
+  <div style="margin-bottom:14px"><button class="btn ghost sm" data-act="nav" data-page="${backPage}">${ic('arrow-left')}Back to ${backLabel}</button></div>
+  <div class="panel" style="margin-bottom:18px"><div class="panel-b per-person">
+    ${avatar(person,56)}
+    <div><div class="nm">${esc(person.name)}</div>
+      <div class="meta">
+        <span class="badge ${roleLabel==='Buddy'?'b-buddy':'b-steel'}">${roleLabel}</span>
+        <span>EMP No: <b>${esc(person.code)}</b></span>
+        <span>·</span><span>Section: <b>${esc(secName(person.section))}</b></span>
+        ${sec?`<span>·</span><span class="badge b-steel">${esc(depName(sec.dept))}</span>`:''}
+        ${kind!=='buddy'&&person.title?`<span>·</span><span>${esc(person.title)}</span>`:''}
+        ${kind==='buddy'?(assignedEmp?`<span>·</span><span>Assigned employee: <b>${esc(assignedEmp.name)}</b></span>`:''):''}
+        <span>·</span><span>${kind==='buddy'?'Assigned employee service:':'Service period:'} ${serviceBadge(serviceDays)}</span>
+        ${creditBuddy?`<span>·</span><span class="badge b-buddy">${ic('corner-down-right')}Points → ${esc(creditBuddy.name)}</span>`:(kind!=='buddy'?`<span>·</span><span class="badge b-warn">${ic('link')}No buddy — points stay with employee</span>`:'')}
+      </div></div>
+    <div class="spacer" style="flex:1"></div>
+    <span class="badge ${done===EVAL_PERIODS.length?'b-ok':'b-warn'}">${ic('list-checks')}${done} / ${EVAL_PERIODS.length} periods done</span>
+    ${nextUnlock?`<span class="badge b-warn">${ic('lock')}Next: ${esc(nextUnlock.p)} in ${Math.max(nextUnlock.days,0)} day${nextUnlock.days===1?'':'s'}</span>`
+      :(done===EVAL_PERIODS.length?`<span class="badge b-ok">${ic('badge-check')}All periods done</span>`:'')}
+  </div></div>
+  ${!DB.factors[stage].length?noFactorsNote(stage):''}
+  ${GATING_NOTE}
+  <div class="panel">
+    <div class="panel-h"><h3>Evaluation periods</h3><span class="sub">each period's Give Points page lists only the factors assigned to that period</span></div>
+    ${rows}
+  </div>`;
+}
+
+/* ---------- Give Points modal ---------- */
+window.gpClamp=el=>{
+  const max=+el.dataset.max||0;
+  const hint=$('#gp-hint-'+el.dataset.fid);
+  if(el.value===''){if(hint)hint.textContent='0 / '+max+' pts';return;}
+  let v=Math.round(+el.value||0);
+  if(v<0)v=0; if(v>max)v=max;
+  el.value=v;
+  if(hint)hint.textContent=v+' / '+max+' pts';
+};
+function givePointsModal(kind,id,period){
+  if(!hasPerm(evPermOf(kind)))return toast(`Permission required: ${PERM_LABEL[evPermOf(kind)]}.`,'lock');
+  const stage=stageOfKind(kind);
+  if(!EVAL_PERIODS.includes(period))return toast('Unknown evaluation period.','circle-alert');
+  const factors=periodFactors(stage,period);
+  if(!factors.length)return toast(`No factors are assigned to "${period}" in the ${STAGE_NAMES[stage]} review set — add factors with this Evaluation Period first.`,'circle-alert');
+  const person=kind==='buddy'?budById(id):empById(id);
+  if(!person)return;
+  const store=storeFor(kind,id);
+  const rec=store.periods[period];
+  if(rec&&rec.status==='submitted')return toast(`Points already given for ${period} — Evaluation Done.`,'badge-check');
+  const sd=personServiceDays(kind,id), th=PERIOD_DAYS[period];
+  if(sd==null){
+    return toast(kind==='buddy'
+      ?'Give Points locked — this buddy has no assigned employee.'
+      :'Give Points locked — this employee has no join date on record.','lock');
+  }
+  if(!(sd>th))return toast(`Give Points locked — service must exceed ${th} days (currently ${sd}).`,'lock');
+  const creditBuddy=kind==='buddy'?person:budById((activePairingOf(id)||{}).buddyId);
+  const cur=rec||{points:{},comment:''};
+  const pMax=periodMax(stage,period);
+  const rows=factors.map(f=>{
+    const max=+f.maxPoints||0;
+    const v=(cur.points&&cur.points[f.id]!=null)?cur.points[f.id]:'';
+    return `<div class="gp-row">
+      <div class="gp-info">
+        <div class="gp-title">${esc(f.title)}<span class="wgt">Max ${max} pts</span></div>
+        <div class="gp-desc">${esc(f.desc)}</div>
+      </div>
+      <div class="gp-field">
+        <label class="lbl">Give Points</label>
+        <input class="inp" type="number" inputmode="numeric" min="0" max="${max}" step="1" value="${v}" placeholder="0"
+          data-fid="${f.id}" data-max="${max}" oninput="gpClamp(this)">
+        <small class="t-dim" id="gp-hint-${f.id}">${v!==''?esc(String(v)):'0'} / ${max} pts</small>
+      </div></div>`;
+  }).join('');
+  openModal({title:`Give Points — ${esc(person.name)}`,lg:true,body:`
+    <p class="t-dim" style="font-size:13px;margin-bottom:4px"><b>${esc(period)}</b> · ${kind==='buddy'?'Buddy':'Employee'} · ${esc(secName(person.section))} · service: ${sd} days</p>
+    <p class="t-dim" style="font-size:13px;margin-bottom:10px">${STAGE_NAMES[stage]} factor set — showing only the <b>${factors.length} factor${factors.length===1?'':'s'}</b> assigned to this period · maximum <b>${pMax} ${esc(DB.settings.pointName)}</b> total.</p>
+    <div class="note" style="margin-bottom:14px">${ic('corner-down-right')}<span>${creditBuddy
+      ?`All points given here will be <b>redirected to the buddy ${esc(creditBuddy.name)}</b>${kind==='buddy'?' (this buddy)':''} and count toward every tier.`
+      :'This person has <b>no assigned buddy</b> — the points will be kept on their own record.'}</span></div>
+    ${rows}
+    <div style="margin-top:16px"><label class="lbl">Comment</label>
+      <textarea class="inp" id="evm-cmt" placeholder="Highlights, growth areas, notes…">${esc(cur.comment||'')}</textarea></div>`,
+    footer:`<button class="btn ghost" id="evm-save" data-kind="${kind}" data-id="${id}" data-period="${period}">${ic('save')}Save draft</button>
+            <button class="btn" id="evm-submit" data-kind="${kind}" data-id="${id}" data-period="${period}">${ic('send')}Submit points</button>`});
+}
+
+/* =========================================================
+   PAGE: BUDDY DETAILS
+   ========================================================= */
+const TYPE_COLORS={'Peer Nomination':'#1E3FBE','Manager Award':'#34509E','Spot Bonus':'#E8AE00','Milestone':'#7C8A93','HR Recognition':'#B23A2E','Evaluation Points':'#2E9E6B','Buddy Evaluation Points':'#C79000'};
+
+function budGrowthChart(budId,next){
+  const tier=next?next.tier:null;
+  const led=buddyLedger(budId);
+  const target=tier?tier.minPoints:null;
+  if(!led.length)return emptyBox('No credited points yet — the growth chart and forecast appear once this buddy receives points.','trending-up');
+  const series=[];let cum=0;
+  led.forEach(x=>{cum+=x.points;series.push({date:x.date,cum});});
+  const last=series[series.length-1];
+  const rate=rateFromLedger(led);
+  let forecast=null;
+  if(tier&&rate>0&&last.cum<target){
+    const months=Math.ceil((target-last.cum)/rate);
+    forecast={date:addMonths(today(),months),cum:target};
+  }
+  const W=560,H=230,pl=44,pr=14,pt=16,pb=30;
+  const d0=series[0].date;
+  const d1=forecast?forecast.date:last.date;
+  const t0=new Date(d0+'T00:00:00').getTime();
+  const t1=new Date(d1+'T00:00:00').getTime();
+  const span=Math.max(t1-t0,86400000);
+  const yMax=Math.ceil(Math.max(target||0,last.cum)*1.15/50)*50||50;
+  const X=d=>pl+((new Date(d+'T00:00:00').getTime()-t0)/span)*(W-pl-pr);
+  const Y=v=>H-pb-(v/yMax)*(H-pt-pb);
+  let area=`M ${X(series[0].date).toFixed(1)} ${Y(0).toFixed(1)}`;
+  series.forEach(s=>{area+=` L ${X(s.date).toFixed(1)} ${Y(s.cum).toFixed(1)}`;});
+  area+=` L ${X(last.date).toFixed(1)} ${Y(0).toFixed(1)} Z`;
+  let line=`M ${X(series[0].date).toFixed(1)} ${Y(series[0].cum).toFixed(1)}`;
+  series.slice(1).forEach(s=>{line+=` L ${X(s.date).toFixed(1)} ${Y(s.cum).toFixed(1)}`;});
+  let grid='',yticks='';
+  for(let i=1;i<=3;i++){
+    const v=Math.round(yMax*i/4),y=Y(v);
+    grid+=`<line x1="${pl}" x2="${W-pr}" y1="${y.toFixed(1)}" y2="${y.toFixed(1)}" stroke="#DDE2F1" stroke-dasharray="3 5"/>`;
+    yticks+=`<text x="${pl-6}" y="${(y+4).toFixed(1)}" text-anchor="end" font-size="10" fill="#5A678F" font-family="Instrument Sans">${v}</text>`;
+  }
+  let xticks='';
+  const tickN=Math.min(4,series.length);
+  for(let i=0;i<tickN;i++){
+    const s=series[Math.round(i*(series.length-1)/Math.max(tickN-1,1))];
+    const lbl=new Date(s.date+'T00:00:00').toLocaleDateString('en-US',{month:'short',year:'2-digit'});
+    xticks+=`<text x="${X(s.date).toFixed(1)}" y="${H-10}" text-anchor="middle" font-size="10" fill="#5A678F" font-family="Instrument Sans">${lbl}</text>`;
+  }
+  let targetLine='';
+  if(target!=null){
+    const y=Y(target);
+    targetLine=`<line x1="${pl}" x2="${W-pr}" y1="${y.toFixed(1)}" y2="${y.toFixed(1)}" stroke="#E8AE00" stroke-dasharray="5 4"/>
+      <text x="${W-pr}" y="${(y-5).toFixed(1)}" text-anchor="end" font-size="10.5" font-weight="700" fill="#8A6A00" font-family="Instrument Sans">${esc(tier.name)} · ${target} pts</text>`;
+  }
+  let fLine='';
+  if(forecast){
+    fLine=`<line x1="${X(last.date).toFixed(1)}" y1="${Y(last.cum).toFixed(1)}" x2="${X(forecast.date).toFixed(1)}" y2="${Y(forecast.cum).toFixed(1)}" stroke="#E8AE00" stroke-width="2.4" stroke-dasharray="6 5"/>
+      <circle cx="${X(forecast.date).toFixed(1)}" cy="${Y(forecast.cum).toFixed(1)}" r="4.5" fill="#E8AE00"/>
+      <text x="${(X(forecast.date)-6).toFixed(1)}" y="${(Y(forecast.cum)+16).toFixed(1)}" text-anchor="end" font-size="10" font-weight="600" fill="#8A6A00" font-family="Instrument Sans">forecast</text>`;
+  }
+  return `<svg class="chart-svg" viewBox="0 0 ${W} ${H}">
+    ${grid}${yticks}${xticks}${targetLine}
+    <path d="${area}" fill="#1E3FBE" opacity=".1"/>
+    <path d="${line}" fill="none" stroke="#1E3FBE" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>
+    <circle cx="${X(last.date).toFixed(1)}" cy="${Y(last.cum).toFixed(1)}" r="4.5" fill="#1E3FBE"/>
+    <text x="${X(last.date).toFixed(1)}" y="${(Y(last.cum)-10).toFixed(1)}" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1A2450" font-family="Instrument Sans">${last.cum}</text>
+    ${fLine}</svg>`;
+}
+function budPeriodBars(budId){
+  const W=360,H=210,pl=12,pb=36,pt=20;
+  const data=EVAL_PERIODS.map(p=>{
+    const store=DB.buddyEvals[budId];
+    const rec=(store&&store.periods&&store.periods[p])||null;
+    return {p,pts:rec&&rec.status==='submitted'?periodPts(rec):0,done:!!(rec&&rec.status==='submitted')};
+  });
+  const max=Math.max(...data.map(d=>d.pts),10);
+  const step=(W-pl*2)/5, bw=step*.52;
+  let bars='';
+  data.forEach((d,i)=>{
+    const bh=Math.max((d.pts/max)*(H-pt-pb),2);
+    const x=pl+i*step+(step-bw)/2, y=H-pb-bh;
+    const cx=(x+bw/2).toFixed(1);
+    bars+=`<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${bw.toFixed(1)}" height="${bh.toFixed(1)}" rx="6" fill="${d.done?'#1E3FBE':'#DDE2F1'}"><title>${esc(d.p)}: ${d.pts} pts${d.done?' · Evaluation Done':' · pending'}</title></rect>`;
+    if(d.pts>0)bars+=`<text x="${cx}" y="${(y-6).toFixed(1)}" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1A2450" font-family="Instrument Sans">${d.pts}</text>`;
+    bars+=`<text x="${cx}" y="${H-20}" text-anchor="middle" font-size="9.5" fill="#5A678F" font-family="Instrument Sans">${esc(d.p.replace(' Evaluation',''))}</text>`;
+    bars+=`<text x="${cx}" y="${H-7}" text-anchor="middle" font-size="8.5" fill="${d.done?'#1E3FBE':'#A0A8C0'}" font-family="Instrument Sans">${d.done?'done':'pending'}</text>`;
+  });
+  return `<svg class="chart-svg" viewBox="0 0 ${W} ${H}">${bars}</svg>`;
+}
+function budSourceDonut(budId){
+  const byType={};
+  buddyLedger(budId).forEach(x=>{byType[x.type]=(byType[x.type]||0)+x.points;});
+  const entries=Object.entries(byType);
+  if(!entries.length)return emptyBox('No credited points yet.','pie-chart');
+  const total=entries.reduce((a,[,v])=>a+v,0);
+  const C=2*Math.PI*54;let off=0,segs='';
+  entries.forEach(([k,v])=>{
+    const col=TYPE_COLORS[k]||'#5A678F';
+    const len=v/total*C;
+    segs+=`<circle r="54" cx="70" cy="70" fill="none" stroke="${col}" stroke-width="22" stroke-dasharray="${Math.max(len-2,1)} ${C-len+2}" stroke-dashoffset="${-off}" transform="rotate(-90 70 70)"/>`;
+    off+=len;
+  });
+  const legend=entries.map(([k,v])=>`<li><span class="sw" style="background:${TYPE_COLORS[k]||'#5A678F'}"></span>${esc(k)}<b>${v}</b></li>`).join('');
+  return `<div class="donut-wrap"><svg viewBox="0 0 140 140" width="130" height="130">${segs}
+    <text x="70" y="67" text-anchor="middle" font-size="20" font-weight="700" fill="#1A2450" font-family="Fraunces,serif">${total}</text>
+    <text x="70" y="86" text-anchor="middle" font-size="8" letter-spacing="2" fill="#5A678F" font-family="Instrument Sans">POINTS</text></svg>
+    <ul class="legend">${legend}</ul></div>`;
+}
+
+function rBudDetail(){
+  const id=FS.budDetail;
+  const b=id?budById(id):null;
+  if(!b)return pageHead('Buddy details','Record not found — it may have been removed.')
+    +`<div class="panel">${emptyBox('This buddy no longer exists. Go back and pick another.','circle-alert')}</div>
+      <div style="margin-top:14px"><button class="btn ghost" data-act="nav" data-page="buddies">${ic('arrow-left')}Back to Buddies</button></div>`;
+  const sec=secById(b.section);
+  const pts=buddyPointsOf(b.id);
+  const at=achievedTierOf(b.id);
+  const next=nextTierInfo(b.id);
+  const progress=allTiersProgress(b.id);
+  const ae=buddyAssigned(b.id);
+  const sd=ae?daysSince(ae.joinDate):null;
+  const rate=rateFromLedger(buddyLedger(b.id));
+  let forecastHtml='';
+  if(next){
+    const t=next.tier;
+    let eta;
+    if(next.pointsNeeded<=0&&!next.periodDone){
+      eta=`The ${t.minPoints||0}-pt minimum is already met — complete the <b>${esc(t.evalPeriod)}</b> evaluation to achieve this tier.`;
+    }else if(next.pointsNeeded>0&&rate>0){
+      const months=Math.ceil(next.pointsNeeded/rate);
+      const etaDate=addMonths(today(),months);
+      eta=`At the current pace of <b>≈ ${Math.round(rate)} pts/month</b>, ${esc(b.name)} is forecast to reach <b>${esc(t.name)}</b> around <b>${fmtDate(etaDate)}</b>${next.periodDone?'':' — after completing the '+esc(t.evalPeriod)+' evaluation'}.`;
+    }else{
+      eta='Forecast unavailable — no credited points yet to project a pace.';
+    }
+    forecastHtml=`<div class="note" style="margin:12px 0 0">${ic('trending-up')}<span>${eta}</span></div>`;
+  }else{
+    forecastHtml=`<div class="note" style="margin:12px 0 0">${ic('trophy')}<span><b>Top of the ladder.</b> ${at?esc(at.name):''} is the highest tier currently configured — nothing left to forecast.</span></div>`;
+  }
+  const tierRows=progress.map(pr=>{
+    const t=pr.tier;
+    let status;
+    if(pr.achieved){
+      const d=tierAchievedDate(b.id,t);
+      status=`<span class="badge b-ok">${ic('medal')}Achieved${d&&d.date?` · ${fmtDate(d.date)}`:''}</span>`;
+    }else{
+      const need=[];
+      if(!pr.pointsOk)need.push(`${Math.max(0,(t.minPoints||0)-pts)} more pts`);
+      if(!pr.periodOk)need.push(`${esc(t.evalPeriod)} pending`);
+      status=`<span class="t-dim">Not achieved · ${need.join(' · ')}</span>`;
+    }
+    return `<div class="tier-row ${pr.achieved?'bd-achieved':'bd-pending'}">
+      <span class="sw" style="background:${t.color}"></span><b>${esc(t.name)}</b>
+      <span class="minp">${t.minPoints||0}+ pts</span>
+      <span class="badge b-steel" style="font-size:10.5px" title="Eligible evaluation period">${ic('calendar')}${esc(t.evalPeriod)}</span>
+      <span style="flex:1"></span>
+      <span class="t-dim" style="font-size:12.5px">${pts} total pts</span>
+      ${status}</div>`;
+  }).join('');
+  const nextPanel=next?(()=>{
+    const t=next.tier;
+    const pct=Math.min(100,Math.round(pts/Math.max(t.minPoints||1,1)*100));
+    return `<div class="panel-b">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap">
+        <span style="width:16px;height:16px;border-radius:4px;background:${t.color};display:inline-block;flex:none"></span>
+        <b style="font-family:var(--fd);font-size:19px">${esc(t.name)}</b>
+        <span class="badge b-steel" style="font-size:10.5px">${ic('calendar')}${esc(t.evalPeriod)}</span>
+      </div>
+      <p class="t-dim" style="font-size:12.5px;margin-bottom:10px">${ic('star')} Counting <b>ALL credited points</b> — every evaluation period and awards — toward this tier.</p>
+      <div class="meter"><div class="m-top"><b>${pts} / ${t.minPoints||0} pts</b><span>${pct}%</span></div>
+        <div class="m-bar"><span class="brass" style="width:${pct}%"></span></div></div>
+      <ul class="bk-stats">
+        <li>Points to next tier <b>${next.pointsNeeded}</b></li>
+        <li>Minimum for achievement <b>${t.minPoints||0} pts</b></li>
+        <li>Eligible period <b>${esc(t.evalPeriod)}${next.periodDone?' (done)':' (pending)'}</b></li>
+        <li>Current pace <b>≈ ${Math.round(rate)} pts/month</b></li>
+      </ul>
+      ${forecastHtml}
+    </div>`;
+  })():`<div class="panel-b">
+      ${at?`<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px"><span style="width:16px;height:16px;border-radius:4px;background:${at.color};display:inline-block"></span><b style="font-family:var(--fd);font-size:19px">${esc(at.name)}</b></div>`:''}
+      <p class="t-dim" style="margin-bottom:6px">Every configured tier has been achieved — the ladder is complete for this buddy.</p>
+      <ul class="bk-stats">
+        <li>Total credited points <b>${pts}</b></li>
+        <li>Current pace <b>≈ ${Math.round(rate)} pts/month</b></li>
+      </ul>
+      ${forecastHtml}
+    </div>`;
+  const aePanel= ae? `<div class="panel-b">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">${avatar(ae,44)}
+        <div><b>${esc(ae.name)}</b><br><small class="t-dim">${esc(ae.code)} · ${esc(ae.title||'')}</small></div></div>
+      <ul class="bk-stats">
+        <li>Section <b>${esc(secName(ae.section))}</b></li>
+        <li>Department <b>${esc(depName((secById(ae.section)||{}).dept))}</b></li>
+        <li>Joined <b>${fmtDate(ae.joinDate)}</b></li>
+        <li>Service period <b>${sd!=null?sd+' days':'—'}</b></li>
+        <li>Next unlock <b>${(()=>{const th=EVAL_PERIODS.find(p=>!(sd!=null&&sd>PERIOD_DAYS[p]));return th?`${th} at ${PERIOD_DAYS[th]}d`:'All unlocked'})()}</b></li>
+        <li>Points redirected <b style="color:var(--yellow-ink)">${pts} pts</b></li>
+      </ul></div>`
+    : `<div class="panel-b">${emptyBox('No employee assigned yet — pair this buddy with an employee to start redirecting points.','link')}</div>`;
+  return `
+  <div style="margin-bottom:14px"><button class="btn ghost sm" data-act="nav" data-page="buddies">${ic('arrow-left')}Back to Buddies</button></div>
+  <div class="panel" style="margin-bottom:18px"><div class="panel-b per-person">
+    ${avatar(b,56)}
+    <div><div class="nm">${esc(b.name)}</div>
+      <div class="meta">
+        <span class="badge b-buddy">Buddy</span>
+        <span>EMP No: <b>${esc(b.code)}</b></span>
+        <span>·</span><span>Section: <b>${esc(secName(b.section))}</b></span>
+        ${sec?`<span>·</span><span class="badge b-steel">${esc(depName(sec.dept))}</span>`:''}
+        <span>·</span><span>Contact: <b>${esc(b.contact)}</b></span>
+        <span>·</span><span>Added ${fmtDate(b.added)}</span>
+        ${ae?`<span>·</span><span>Assigned employee: <b>${esc(ae.name)}</b> ${serviceBadge(sd)}</span>`:'<span>·</span><span class="badge b-warn">No assigned employee</span>'}
+      </div></div>
+    <div class="spacer" style="flex:1"></div>
+    <div style="text-align:right">
+      <b style="font-family:var(--fd);font-size:26px;color:var(--yellow-ink)">${pts}</b>
+      <div><span class="t-dim" style="font-size:12px">credited points (all sources)</span></div>
+      <div style="margin-top:6px">${at?tierChipIfAchieved(b.id):'<span class="badge b-mute">No tier achieved yet</span>'}</div>
+    </div>
+  </div></div>
+  <div class="grid-dash">
+    <div class="panel g7"><div class="panel-h"><h3>Tier ladder — achieved vs pending</h3><span class="sub">all points count toward every tier</span></div>
+      <div style="padding:6px 0">${tierRows}</div></div>
+    <div class="panel g5"><div class="panel-h"><h3>Next tier</h3><span class="sub">points to next tier &amp; forecast</span></div>${nextPanel}</div>
+    <div class="panel g8"><div class="panel-h"><h3>Points growth &amp; forecast</h3><span class="sub">all credited points · solid = actual · dashed = forecast</span></div>
+      <div class="panel-b">${budGrowthChart(b.id,next)}</div></div>
+    <div class="panel g4"><div class="panel-h"><h3>Assigned employee</h3><span class="sub">source of redirected points</span></div>${aePanel}</div>
+    <div class="panel g5"><div class="panel-h"><h3>Points by evaluation period</h3><span class="sub">from completed evaluations</span></div>
+      <div class="panel-b">${budPeriodBars(b.id)}</div></div>
+    <div class="panel g7"><div class="panel-h"><h3>Points by source</h3><span class="sub">awards and evaluations both count toward every tier</span></div>
+      <div class="panel-b">${budSourceDonut(b.id)}</div></div>
+  </div>`;
+}
+
+/* =========================================================
+   PAGE: TIER CONFIGURATION
+   ========================================================= */
+function rTiers(){
+  const canT=hasPerm('tiers');
+  const ts=[...DB.tiers].sort((a,b)=>(a.minPoints||0)-(b.minPoints||0));
+  const topMin=Math.max(...ts.map(t=>t.minPoints||0),1);
+  const stair=ts.map(t=>{
+    const h=(t.minPoints||0)===0?56:40+Math.round(((t.minPoints||0)/topMin)*180);
+    return `<div class="t"><div class="col" style="height:${h}px;background:${t.color}">
+      <b>${esc(t.name)}</b><span>${t.minPoints||0}+ pts</span></div></div>`}).join('');
+  const rows=ts.map(t=>{
+    const achieved=DB.buddyPeople.filter(b=>{const a=achievedTierOf(b.id);return a&&a.id===t.id}).length;
+    return `<div class="tier-row">
+      <span class="sw" style="background:${t.color}"></span><b>${esc(t.name)}</b>
+      <span class="badge b-steel" style="font-size:10.5px">${ic('calendar')}${esc(t.evalPeriod)}</span>
+      <span class="minp">${t.minPoints||0}+ pts</span>
+      <span class="perks">${esc(t.perks)}</span>
+      <span class="badge ${achieved?'b-ok':'b-mute'}">${ic('medal')}${achieved} achieved</span>
+      <span class="acts">
+        <button class="icon-btn" data-act="tier-edit" data-id="${t.id}" ${canT?'':'disabled style="opacity:.4;cursor:not-allowed"'}>${ic('pencil')}</button>
+        <button class="icon-btn" data-act="tier-del" data-id="${t.id}" ${canT?'':'disabled style="opacity:.4;cursor:not-allowed"'}>${ic('trash-2')}</button>
+      </span></div>`}).join('');
+  return pageHead('Tier configuration','ALL points count toward ALL tiers — every evaluation period and awards — measured against each tier\'s minimum and eligible evaluation period.',
+    canT?`<button class="btn" data-act="tier-add">${ic('plus')}Add tier</button>`:'')
+  +`<div class="note">${ic('star')}<span>A buddy <b>achieves</b> a tier when their <b>total credited points</b> (from every evaluation period and awards) meet the tier's <b>Minimum Points for Achievement</b> AND the tier's <b>Eligible Evaluation Period</b> is completed (Evaluation Done).</span></div>
+  <div class="grid-dash">
+    <div class="panel g5"><div class="panel-h"><h3>The ladder</h3><span class="sub">height = minimum points</span></div>
+      <div class="panel-b"><div class="stair">${stair}</div></div></div>
+    <div class="panel g7"><div class="panel-h"><h3>Tiers &amp; perks</h3></div>${rows}</div></div>`;
+}
+
+function tierModal(id){
+  const t=id?DB.tiers.find(x=>x.id===id):{name:'',color:'#9C5B2B',evalPeriod:'01st Evaluation',minPoints:0,perks:''};
+  const COLORS=['#9C5B2B','#7C8A93','#E8AE00','#1E3FBE','#0096C7','#3D5AE0','#2E9E6B','#7A3E5F'];
+  openModal({title:id?'Edit tier':'Add tier',body:`
+    <p class="t-dim" style="font-size:13px;margin-bottom:14px">A tier is achieved when the buddy's <b>total credited points</b> (every evaluation period and awards) meet the minimum AND its eligible evaluation period is completed (Evaluation Done).</p>
+    <div class="frow">
+      <div><label class="lbl">Tier name</label><input class="inp" id="t-name" value="${esc(t.name)}" placeholder="e.g. Gold"></div>
+      <div><label class="lbl">Color</label>
+        <select class="inp" id="t-color">${COLORS.map(c=>`<option value="${c}" ${t.color===c?'selected':''}>${c}</option>`).join('')}</select></div>
+    </div>
+    <div class="frow">
+      <div><label class="lbl">Eligible Evaluation Period</label>
+        <select class="inp" id="t-period">${EVAL_PERIODS.map(p=>`<option ${t.evalPeriod===p?'selected':''}>${p}</option>`).join('')}</select></div>
+      <div><label class="lbl">Minimum Points for Achievement</label>
+        <input class="inp" id="t-min" type="number" min="0" value="${+t.minPoints||0}"></div>
+    </div>
+    <div><label class="lbl">Perks</label>
+      <textarea class="inp" id="t-perks" placeholder="What does this tier unlock?">${esc(t.perks)}</textarea></div>`,
+    footer:`<button class="btn ghost" data-act="modal-close">Cancel</button><button class="btn" id="tier-ok" data-id="${id||''}">Save tier</button>`});
+}
+
+/* =========================================================
+   PAGE: SECTIONS & DEPARTMENTS
+   ========================================================= */
+function rSections(){
+  const canS=hasPerm('sections');
+  const secEmpCount=sid=>DB.employees.filter(e=>e.section===sid).length;
+  const depRows=DB.departments.map(d=>{
+    const n=DB.sections.filter(s=>s.dept===d.id).length;
+    const emps=DB.employees.filter(e=>{const s=secById(e.section);return s&&s.dept===d.id}).length;
+    return `<div class="sec-row">
+      <div class="nm"><b>${esc(d.name)}</b><small>${n} section${n===1?'':'s'} · ${emps} employee${emps===1?'':'s'}</small></div>
+      <div class="bar"><span style="width:${Math.round(n/Math.max(DB.sections.length,1)*100)}%"></span></div>
+      <div class="cnt">${n} section${n===1?'':'s'}</div>
+      ${canS?`<button class="icon-btn" data-act="dep-del" data-id="${d.id}" title="Delete department">${ic('trash-2')}</button>`:''}</div>`}).join('');
+  const list=DB.sections.filter(s=>FS.secDep==='all'||s.dept===FS.secDep);
+  const maxN=Math.max(...DB.sections.map(s=>secEmpCount(s.id)),1);
+  const rows=list.map(s=>{
+    const n=secEmpCount(s.id),lead=empById(s.lead),dep=depName(s.dept);
+    return `<div class="sec-row">
+      <div class="nm"><b>${esc(s.name)}</b><small>Lead: ${esc(lead?lead.name:'—')}</small></div>
+      <span style="width:160px">${dep?`<span class="badge b-steel">${esc(dep)}</span>`:'<span class="badge b-mute">No department</span>'}</span>
+      <div class="bar"><span style="width:${Math.round(n/maxN*100)}%"></span></div>
+      <div class="cnt">${n} employee${n===1?'':'s'}</div>
+      ${canS?`<button class="icon-btn" data-act="sec-edit" data-id="${s.id}">${ic('pencil')}</button>
+      <button class="icon-btn" data-act="sec-del" data-id="${s.id}">${ic('trash-2')}</button>`:''}</div>`}).join('');
+  return pageHead('Sections & Departments','Create departments, then organize sections inside them.',
+    canS?`<button class="btn" data-act="sec-add">${ic('plus')}Add section</button>`:'')
+  +`<div class="panel" style="margin-bottom:18px">
+      <div class="panel-h"><h3>Departments</h3><span class="sub">top-level groupings</span></div>
+      <div class="panel-b" style="border-bottom:1px solid var(--line-soft)">
+        <div class="dep-create">
+          <input class="inp" id="dep-name" placeholder="Enter department name…" ${canS?'':'readonly'} onkeydown="if(event.key==='Enter'&&'${canS}'){event.preventDefault();depCreate()}">
+          ${canS?`<button class="btn brass" data-act="dep-create">${ic('plus')}Create Department</button>`:''}
+        </div>
+        <div class="toolbar" style="margin:16px 0 0">
+          <label class="lbl" style="margin:0">View sections of</label>
+          <select class="inp" onchange="secDepFilter(this.value)">
+            <option value="all">All departments</option>
+            ${DB.departments.map(d=>`<option value="${d.id}" ${FS.secDep===d.id?'selected':''}>${esc(d.name)}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+      ${depRows||emptyBox('No departments yet — enter a name above and press Create Department.','building-2')}
+    </div>
+    <div class="panel">
+      <div class="panel-h"><h3>Sections</h3><span class="sub">${list.length} shown${FS.secDep!=='all'?' · filtered by '+esc(depName(FS.secDep)):''}</span></div>
+      ${rows||emptyBox('No sections in this view — add one or change the department filter.','building-2')}
+    </div>`;
+}
+
+/* =========================================================
+   PAGE: BACKUP
+   ========================================================= */
+function rBackup(){
+  const canB=hasPerm('backup');
+  const kb=(JSON.stringify(DB).length/1024).toFixed(1);
+  return pageHead('Backup & restore','Your data lives in this browser — export it regularly. The company logo is included in the snapshot.')
+  +`<div class="grid-dash">
+    <div class="panel g5"><div class="panel-h"><h3>Export / Import</h3></div>
+      <div class="panel-b bk-big">
+        <p class="t-dim" style="font-size:13.5px">Download a full JSON snapshot of buddies, departments, employees, pairings, factor sets, evaluations, tiers, history, users, settings and the company logo.</p>
+        <button class="btn" data-act="bk-export" ${canB?'':'disabled style="opacity:.5;cursor:not-allowed"'}>${ic('download')}Export backup (JSON)</button>
+        <button class="btn ghost" data-act="bk-import" ${canB?'':'disabled style="opacity:.5;cursor:not-allowed"'}>${ic('upload')}Import backup file</button>
+        <input type="file" id="bk-file" accept="application/json" class="hidden">
+        <div class="note" style="margin:6px 0 0">${ic('info')}<span>Last backup: <b>${DB.meta.lastBackup?fmtDate(DB.meta.lastBackup):'never'}</b></span></div>
+      </div></div>
+    <div class="panel g4"><div class="panel-h"><h3>Current data</h3></div>
+      <div class="panel-b"><ul class="bk-stats">
+        <li>Buddies (roster) <b>${DB.buddyPeople.length}</b></li>
+        <li>Buddy pairings <b>${DB.buddies.length}</b></li>
+        <li>Departments <b>${DB.departments.length}</b></li>
+        <li>Sections <b>${DB.sections.length}</b></li>
+        <li>Employees <b>${DB.employees.length}</b></li>
+        <li>Factors · Employee review <b>${DB.factors.emp.length}</b></li>
+        <li>Factors · Manager review <b>${DB.factors.mgr.length}</b></li>
+        <li>Factors · HR review <b>${DB.factors.hr.length}</b></li>
+        <li>Tiers <b>${DB.tiers.length}</b></li>
+        <li>Reward entries <b>${DB.history.length}</b></li>
+        <li>Users <b>${DB.users.length}</b></li>
+        <li>Company logo <b>${DB.settings.logo?'set':'not set'}</b></li>
+        <li>Storage used <b>${kb} KB</b></li>
+      </ul></div></div>
+    <div class="panel g3 danger-zone"><div class="panel-h"><h3>Reset</h3></div>
+      <div class="panel-b">
+        <p class="t-dim" style="font-size:13.5px;margin-bottom:14px">Wipe everything and restore the original demo dataset.</p>
+        <button class="btn danger" data-act="bk-reset" style="width:100%;justify-content:center" ${canB?'':'disabled style="opacity:.5;cursor:not-allowed"'}>${ic('rotate-ccw')}Reset to seed data</button>
+      </div></div></div>`;
+}
+
+/* =========================================================
+   PAGE: USER MANAGEMENT
+   ========================================================= */
+function rUsers(){
+  const canU=hasPerm('users');
+  const roleCls={Admin:'b-steel',Manager:'b-ok',HR:'b-warn',Employee:'b-mute'};
+  const rows=[...DB.users].sort((a,b)=>a.username.localeCompare(b.username)).map(u=>{
+    const permCount=Array.isArray(u.permissions)?u.permissions.length:0;
+    return `<tr>
+    <td><span style="display:flex;align-items:center;gap:11px">${avatar({name:u.name,id:u.empId||u.username},32)}
+      <span><span class="t-strong">${esc(u.name)}</span><br><small class="t-dim">@${esc(u.username)}</small></span></span></td>
+    <td><span class="badge ${roleCls[u.role]||'b-mute'}">${esc(u.role)}</span></td>
+    <td><span class="badge ${permCount>=PERMS.length?'b-ok':'b-steel'}">${ic('check-square')}${permCount} / ${PERMS.length} tabs</span></td>
+    <td class="t-dim">${esc((empById(u.empId)||{}).name||'—')}</td>
+    <td>${u.active?'<span class="badge b-ok">Active</span>':'<span class="badge b-bad">Disabled</span>'}</td>
+    <td style="text-align:right;white-space:nowrap">
+      <button class="icon-btn" data-act="user-pw" data-id="${u.id}" title="Reset password" ${canU?'':'disabled style="opacity:.4;cursor:not-allowed"'}>${ic('key-round')}</button>
+      <button class="icon-btn" data-act="user-edit" data-id="${u.id}" title="Edit & tick permissions" ${canU?'':'disabled style="opacity:.4;cursor:not-allowed"'}>${ic('pencil')}</button>
+      <button class="icon-btn" data-act="user-toggle" data-id="${u.id}" title="${u.active?'Disable':'Enable'}" ${canU?'':'disabled style="opacity:.4;cursor:not-allowed"'}>${ic(u.active?'user-x':'user-check')}</button>
+      <button class="icon-btn" data-act="user-del" data-id="${u.id}" title="Delete" ${canU?'':'disabled style="opacity:.4;cursor:not-allowed"'}>${ic('trash-2')}</button></td></tr>`}).join('');
+  return pageHead('User management','Accounts, roles and tick-box permissions — tick exactly which tabs each user can access. Unticked tabs are hidden from their sidebar and blocked.',
+    canU?`<button class="btn" data-act="user-add">${ic('plus')}Add user</button>`:'')
+  +`<div class="panel"><div class="tbl-wrap"><table class="tbl">
+    <thead><tr><th>User</th><th>Role</th><th>Permissions</th><th>Linked employee</th><th>Status</th><th style="text-align:right">Actions</th></tr></thead>
+    <tbody>${rows}</tbody></table></div></div>`;
+}
+
+/* =========================================================
+   PAGE: SETTINGS — logo upload + glow toggle
+   ========================================================= */
+function logoPreviewHTML(){
+  return DB.settings.logo
+    ?`<img src="${DB.settings.logo}" alt="Company logo">`
+    :`<span class="ph">${ic('image')}No logo<br>uploaded</span>`;
+}
+function rSettings(){
+  const canS=hasPerm('settings');
+  const s=DB.settings;
+  return pageHead('Settings','Program-wide preferences. The organization name is displayed with its first letter capitalized across all pages.')
+  +`<div class="set-grid">
+    <div class="panel"><div class="panel-h"><h3>Program settings</h3></div>
+      <div class="panel-b">
+        <div class="frow"><div><label class="lbl">Organization name <span style="text-transform:none;letter-spacing:0;font-weight:500">· original name — shown with the first letter capitalized</span></label><input class="inp" id="set-org" value="${esc(s.orgName)}" ${canS?'':'readonly'}></div>
+          <div><label class="lbl">Program name</label><input class="inp" id="set-prog" value="${esc(s.programName)}" ${canS?'':'readonly'}></div></div>
+        <div class="frow"><div><label class="lbl">Point unit name</label><input class="inp" id="set-point" value="${esc(s.pointName)}" ${canS?'':'readonly'}></div>
+          <div><label class="lbl">Current review period</label><input class="inp" id="set-period" value="${esc(s.period)}" ${canS?'':'readonly'}></div></div>
+        <div style="max-width:220px"><label class="lbl">Monthly point cap (soft)</label><input class="inp" type="number" id="set-cap" value="${s.monthlyCap}" min="10" ${canS?'':'readonly'}></div>
+        <label class="glow-toggle"><input type="checkbox" id="set-glow" ${s.glow?'checked':''} ${canS?'':'disabled'}>
+          <span>Colorful glow effects &amp; animations <span class="t-dim">· halo rings, rainbow buttons, glowing tabs &amp; cards</span></span></label>
+        <div style="margin-top:18px">${canS?`<button class="btn" data-act="set-save">${ic('save')}Save settings</button>`:`<p class="t-dim" style="font-size:12.5px">${ic('lock')} You don't have the Settings permission ticked — values are read-only.</p>`}</div>
+      </div></div>
+    <div>
+      <div class="panel" style="margin-bottom:18px"><div class="panel-h"><h3>Company logo</h3><span class="sub">shown on the Home hero, sign-in screen and sidebar</span></div>
+        <div class="panel-b">
+          <div class="logo-box">
+            <div class="logo-preview" id="logo-preview">${logoPreviewHTML()}</div>
+            <div class="logo-actions">
+              <input type="file" id="logo-file" accept="image/png,image/jpeg,image/gif,image/webp,image/svg+xml" class="hidden">
+              ${canS?`<button class="btn" data-act="logo-upload">${ic('image-plus')}${DB.settings.logo?'Change logo':'Upload logo'}</button>
+              ${DB.settings.logo?`<button class="btn danger" data-act="logo-remove">${ic('trash-2')}Remove logo</button>`:''}
+              <small>PNG, JPG, GIF, WEBP or SVG · stored locally in your browser</small>`
+              :`<small>${ic('lock')} Settings permission required to change the logo</small>`}
+            </div>
+          </div>
+        </div></div>
+      <div class="panel"><div class="panel-h"><h3>Quick actions</h3></div>
+        <div class="panel-b" style="display:flex;flex-direction:column;gap:10px">
+          ${hasPerm('tiers')?`<button class="btn ghost" data-act="nav" data-page="tiers">${ic('layers')}Configure tiers</button>`:''}
+          ${hasPerm('sections')?`<button class="btn ghost" data-act="nav" data-page="sections">${ic('building-2')}Departments &amp; sections</button>`:''}
+          ${hasPerm('users')?`<button class="btn ghost" data-act="nav" data-page="users">${ic('user-cog')}Manage users</button>`:''}
+          ${hasPerm('backup')?`<button class="btn ghost" data-act="nav" data-page="backup">${ic('database')}Backup &amp; restore</button>`:''}
+        </div></div>
+    </div></div>`;
+}
+
+window.applyLogo=(dataUrl)=>{
+  DB.settings.logo=dataUrl||'';
+  saveDB();
+  const pv=$('#logo-preview');
+  if(pv)pv.innerHTML=logoPreviewHTML();
+  render('settings');
+  buildSidebar();
+  refreshBrandChrome();
+  refreshIcons();
+  toast(dataUrl?'Company logo updated — shown on the Home hero, sign-in screen and sidebar.':'Company logo removed — rosette seal restored.','image');
+};
+window.handleLogoFile=file=>{
+  if(!file)return;
+  if(!/^image\//.test(file.type))return toast('Please choose an image file (PNG, JPG, GIF, WEBP or SVG).','circle-alert');
+  if(file.size>1.5*1024*1024)return toast('Image is too large — please choose one under 1.5 MB.','circle-alert');
+  const r=new FileReader();
+  r.onload=()=>{
+    const img=new Image();
+    img.onload=()=>{
+      const MAX=256;
+      let w=img.width,h=img.height;
+      if(w>MAX||h>MAX){const k=MAX/Math.max(w,h);w=Math.round(w*k);h=Math.round(h*k);}
+      const cv=document.createElement('canvas');cv.width=w;cv.height=h;
+      const ctx=cv.getContext('2d');
+      ctx.drawImage(img,0,0,w,h);
+      try{window.applyLogo(cv.toDataURL('image/png'));}
+      catch(err){toast('Could not process that image — try a smaller file.','circle-alert')}
+    };
+    img.onerror=()=>toast('That image could not be read.','circle-alert');
+    img.src=r.result;
+  };
+  r.readAsDataURL(file);
+};
+/* apply / remove the glow theme on <html> */
+function applyGlowTheme(){
+  try{document.documentElement.classList.toggle('glow-on',DB.settings.glow!==false)}catch(e){}
+}
+
+/* =========================================================
+   ACTIONS — every action enforces the user's ticked permissions
+   ========================================================= */
+window.empSearch=v=>{FS.empQ=v;render('employees')};
+window.empSecFilter=v=>{FS.empSec=v;render('employees')};
+window.histEmpFilter=v=>{FS.histEmp=v;render('history')};
+window.histTypeFilter=v=>{FS.histType=v;render('history')};
+window.secDepFilter=v=>{FS.secDep=v;render('sections')};
+
+window.depCreate=()=>{
+  if(!needPerm('sections'))return;
+  const inp=$('#dep-name');if(!inp)return;
+  const name=inp.value.trim();
+  if(!name)return toast('Please enter a department name.','circle-alert');
+  if(DB.departments.some(d=>d.name.toLowerCase()===name.toLowerCase()))return toast('That department already exists.','circle-alert');
+  DB.departments.push({id:uid(),name});
+  saveDB();render('sections');
+  toast(`Department "${name}" created.`,'building-2');
+};
+
+window.bbSecChange=secId=>{
+  const s=secById(secId),el=$('#bb-dep');
+  if(el)el.value=s?depName(s.dept):'—';
+};
+function buddyModal(){
+  if(!DB.sections.length)return toast('Create a department & section first (Sections tab).','circle-alert');
+  const firstSec=DB.sections[0];
+  openModal({title:'Add Buddies',body:`
+    <p class="t-dim" style="font-size:13px;margin-bottom:14px">Buddies are mentors — registered separately from employees. The department is applied automatically from the selected section.</p>
+    <div class="frow"><div><label class="lbl">EMP No</label>
+      <input class="inp" id="bb-empno" value="${nextBuddyCode()}" placeholder="e.g. EMP-013"></div>
+    <div><label class="lbl">Full name</label><input class="inp" id="bb-name" placeholder="e.g. Alex Rivera"></div></div>
+    <div class="frow"><div><label class="lbl">Section</label>
+      <select class="inp" id="bb-sec" onchange="bbSecChange(this.value)">
+        ${DB.sections.map(s=>`<option value="${s.id}" ${s.id===firstSec.id?'selected':''}>${esc(s.name)}</option>`).join('')}</select></div>
+    <div><label class="lbl">Department <span style="text-transform:none;letter-spacing:0;font-weight:500">· auto-applied</span></label>
+      <input class="inp" id="bb-dep" readonly value="${esc(depName(firstSec.dept))}"></div></div>
+    <div><label class="lbl">Contact number</label><input class="inp" id="bb-contact" type="tel" placeholder="e.g. +1 555 0134"></div>`,
+    footer:`<button class="btn ghost" data-act="modal-close">Cancel</button><button class="btn brass" id="bb-ok">${ic('user-plus')}Add Buddies</button>`});
+}
+
+function facModal(stage,id){
+  const f=id?DB.factors[stage].find(x=>x.id===id):null;
+  openModal({title:(id?'Edit Factor':'Add Factor')+' · '+STAGE_NAMES[stage]+' review set',body:`
+    <p class="t-dim" style="font-size:13px;margin-bottom:14px">This factor is added only to the <b>${STAGE_NAMES[stage]} review</b> set and will appear <b>only on the Give Points page of its assigned Evaluation Period</b>.</p>
+    <div style="margin-bottom:14px"><label class="lbl">Factor title</label><input class="inp" id="ff-title" value="${esc(f?f.title:'')}" placeholder="e.g. Peer Support &amp; Collaboration"></div>
+    <div style="margin-bottom:14px"><label class="lbl">Description</label><textarea class="inp" id="ff-desc" placeholder="What does this factor measure?">${esc(f?f.desc:'')}</textarea></div>
+    <div class="frow">
+      <div><label class="lbl">Maximum Allocated Points</label>
+        <input class="inp" id="ff-max" type="number" min="1" max="100000" value="${f?+f.maxPoints||100:100}"></div>
+      <div><label class="lbl">Evaluation Period</label>
+        <select class="inp" id="ff-period">${EVAL_PERIODS.map((p,i)=>`<option ${(f?f.evalPeriod===p:i===0)?'selected':''}>${p}</option>`).join('')}</select></div>
+    </div>`,
+    footer:`<button class="btn ghost" data-act="modal-close">Cancel</button><button class="btn brass" id="fac-ok" data-stage="${stage}" data-id="${id||''}">${ic(f?'check':'plus')}${id?'Save factor':'Add Factor'}</button>`});
+}
+
+window.empDepChange=deptId=>{
+  const secSel=$('#f-sec'),budSel=$('#f-buddy');
+  if(!secSel)return;
+  const secs=DB.sections.filter(s=>s.dept===deptId);
+  secSel.innerHTML=secs.length?secs.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join('')
+    :'<option value="">— no sections in this department —</option>';
+  const first=secs[0]?secs[0].id:'';
+  if(budSel)budSel.innerHTML='<option value="">— none —</option>'+buddyOptions(first,null);
+};
+window.empSecChange=secId=>{
+  const budSel=$('#f-buddy');
+  if(budSel)budSel.innerHTML='<option value="">— none —</option>'+buddyOptions(secId,null);
+};
+function buddyOptions(secId,sel){
+  let list=DB.buddyPeople.filter(b=>b.section===secId);
+  if(sel&&!list.some(x=>x.id===sel)){const cur=budById(sel);if(cur)list=[cur,...list];}
+  if(!list.length)return '<option value="">— no buddies in this section —</option>';
+  return list.map(b=>`<option value="${b.id}" ${sel===b.id?'selected':''}>${esc(b.name)} · ${esc(b.code)}${sel===b.id?' · current':''}</option>`).join('');
+}
+function empModal(id){
+  if(!DB.departments.length)return toast('Create a department first (Sections tab).','circle-alert');
+  const e=id?empById(id):null;
+  const dept=id?((secById(e.section)||{}).dept||DB.departments[0].id):DB.departments[0].id;
+  const firstSecOfDept=(DB.sections.find(s=>s.dept===dept)||{}).id||'';
+  const sec=id?e.section:firstSecOfDept;
+  const pairing=id?activePairingOf(id):null;
+  const buddy=pairing?pairing.buddyId:'';
+  openModal({title:id?'Edit employee':'Add employee',body:`
+    <div class="frow"><div><label class="lbl">Full name</label><input class="inp" id="f-name" value="${esc(e?e.name:'')}"></div>
+    <div><label class="lbl">Employee code</label><input class="inp" id="f-code" value="${esc(e?e.code:'EMP-'+String(DB.employees.length+1).padStart(3,'0'))}"></div></div>
+    <div class="frow"><div><label class="lbl">Department</label>
+      <select class="inp" id="f-dep" onchange="empDepChange(this.value)">
+        ${DB.departments.map(d=>`<option value="${d.id}" ${dept===d.id?'selected':''}>${esc(d.name)}</option>`).join('')}</select></div>
+    <div><label class="lbl">Section</label>
+      <select class="inp" id="f-sec" onchange="empSecChange(this.value)">
+        ${(DB.sections.filter(s=>s.dept===dept).map(s=>`<option value="${s.id}" ${sec===s.id?'selected':''}>${esc(s.name)}</option>`).join(''))||'<option value="">— no sections in this department —</option>'}</select></div></div>
+    <div class="frow"><div><label class="lbl">Job title</label><input class="inp" id="f-title" value="${esc(e?e.title:'')}"></div>
+    <div><label class="lbl">Join date <span style="text-transform:none;letter-spacing:0;font-weight:500">· drives the evaluation unlock milestones</span></label><input class="inp" id="f-jd" type="date" value="${e?e.joinDate:today()}"></div></div>
+    <div style="margin-bottom:14px"><label class="lbl">Email</label><input class="inp" id="f-email" type="email" value="${esc(e?e.email:'')}"></div>
+    <div><label class="lbl">Assign buddy <span style="text-transform:none;letter-spacing:0;font-weight:500">· all of this employee's points will redirect to this buddy</span></label>
+      <select class="inp" id="f-buddy"><option value="">— none —</option>${buddyOptions(sec,buddy)}</select></div>`,
+    footer:`<button class="btn ghost" data-act="modal-close">Cancel</button><button class="btn" id="f-ok" data-id="${id||''}">${id?'Save changes':'Add employee'}</button>`});
+}
+
+function buddyPairModal(bid){
+  const b=budById(bid);if(!b)return;
+  const cands=DB.employees.filter(e=>e.section===b.section&&!activePairingOf(e.id));
+  if(!cands.length)return toast(`No unpaired employees in ${secName(b.section)} to pair with.`,'circle-alert');
+  openModal({title:`Pair ${esc(b.name)}`,body:`
+    <p class="t-dim" style="margin-bottom:12px">Buddy <b>${esc(b.name)}</b> (${esc(secName(b.section))} · ${esc(depName((secById(b.section)||{}).dept))}) — choose an employee from the same section. <b>All of that employee's points will redirect to ${esc(b.name)}.</b></p>
+    <select class="inp" id="bp-emp">${cands.map(e=>`<option value="${e.id}">${esc(e.name)} — ${esc(e.title)}</option>`).join('')}</select>`,
+    footer:`<button class="btn ghost" data-act="modal-close">Cancel</button><button class="btn" id="bp-ok" data-id="${bid}">Create pairing</button>`});
+}
+
+/* ---------- user modal with tick-box permissions ---------- */
+function userModal(id){
+  const u=id?DB.users.find(x=>x.id===id):null;
+  const role=u?u.role:'Employee';
+  const perms=Array.isArray(u&&u.permissions)?u.permissions:roleDefaults(role);
+  const permBoxes=PERMS.map(p=>`<label>
+      <input type="checkbox" data-perm="${p.key}" ${perms.includes(p.key)?'checked':''} ${role==='Admin'?'disabled':''}>
+      <span>${esc(p.label)}</span></label>`).join('');
+  openModal({title:id?'Edit user & permissions':'Add user',body:`
+    <div class="frow"><div><label class="lbl">Username</label><input class="inp" id="u-user" value="${esc(u?u.username:'')}"></div>
+    <div><label class="lbl">Full name</label><input class="inp" id="u-name" value="${esc(u?u.name:'')}"></div></div>
+    <div class="frow"><div><label class="lbl">Role</label><select class="inp" id="u-role" onchange="uRoleSync(this.value)">
+      ${['Admin','Manager','HR','Employee'].map(r=>`<option ${(role===r)?'selected':''}>${r}</option>`).join('')}</select></div>
+    <div><label class="lbl">Linked employee</label><select class="inp" id="u-emp"><option value="">— none —</option>${empOpts(u?u.empId:'')}</select></div></div>
+    <div><label class="lbl">Password ${id?'(leave blank to keep current)':'(default: welcome1)'}</label><input class="inp" id="u-pass" type="text"></div>
+    <div style="margin:14px 0 6px"><label class="lbl">Tab permissions <span style="text-transform:none;letter-spacing:0;font-weight:500">· tick exactly which tabs this user can access</span></label>
+      ${role==='Admin'?`<p class="t-dim" style="font-size:12px;margin:0 0 6px">${ic('shield-check')} Admins always have full access to every tab — ticks are locked.</p>`:''}
+      <div class="perm-grid" id="perm-grid">${permBoxes}</div>
+      <small class="t-dim" style="display:block;margin-top:6px">Unticked tabs are hidden from this user's sidebar and blocked with an Access denied page. Changing the role resets the ticks to that role's defaults.</small></div>`,
+    footer:`<button class="btn ghost" data-act="modal-close">Cancel</button><button class="btn" id="u-ok" data-id="${id||''}">Save user</button>`});
+}
+window.uRoleSync=role=>{
+  const defs=roleDefaults(role);
+  document.querySelectorAll('#modalRoot input[data-perm]').forEach(cb=>{
+    cb.checked=defs.includes(cb.dataset.perm);
+    cb.disabled=(role==='Admin');
+  });
+};
+
+const ACTIONS={
+  'nav':d=>go(d.page),
+  'sb-toggle':()=>{const sb=$('#sidebar');if(sb)sb.classList.toggle('open')},
+  'logout':()=>logout(),
+  'modal-close':()=>closeModal(),
+  'pw-eye':(d,el)=>{const p=$('#lg-pass');if(!p)return;p.type=p.type==='password'?'text':'password';
+    el.innerHTML=ic(p.type==='password'?'eye':'eye-off');refreshIcons();},
+  'demo':d=>{const u=$('#lg-user'),p=$('#lg-pass'),err=$('#lg-err');
+    if(u)u.value=d.u;if(p)p.value=d.p;if(err)err.classList.add('hidden');},
+
+  'eval-open':d=>{
+    if(!needPerm(evPermOf(d.kind||'mgr')))return;
+    FS.evDetail={kind:d.kind,id:d.id};go('evdetail')},
+  'ev-give':d=>{
+    if(!needPerm(evPermOf(d.kind||'mgr')))return;
+    givePointsModal(d.kind,d.id,d.period)},
+  'bud-view':d=>{if(!needPerm('buddies'))return;FS.budDetail=d.id;go('buddetail')},
+
+  'logo-upload':()=>{if(!needPerm('settings'))return;const f=$('#logo-file');if(f)f.click()},
+  'logo-remove':()=>{
+    if(!needPerm('settings'))return;
+    if(!DB.settings.logo)return toast('No logo is set yet.','circle-alert');
+    confirmDlg('Remove company logo','The uploaded logo will be deleted and the rosette seal restored on the Home hero, sign-in screen and sidebar.','Remove',
+      ()=>window.applyLogo(''));
+  },
+
+  'hist-clear':()=>{
+    if(!needPerm('history'))return;
+    if(!DB.history.length)return toast('Reward history is already empty.','circle-alert');
+    confirmDlg('Clear reward history',
+      `This removes <b>all ${DB.history.length} reward entries</b> from the ledger. Buddy points, tier achievements, detail-page charts and forecasts are computed from this ledger, so they will reset. Evaluations, reward factors, tiers, employees and buddies are <b>not</b> touched. This cannot be undone — export a backup first if needed.`,
+      'Clear History',
+      ()=>{
+        DB.history=[];
+        saveDB();
+        render('history');
+        toast('Reward history cleared — credited points and tier achievements reset.','eraser');
+      });
+  },
+
+  'dep-create':()=>window.depCreate(),
+  'dep-del':d=>{
+    if(!needPerm('sections'))return;
+    const dep=DB.departments.find(x=>x.id===d.id);if(!dep)return;
+    const n=DB.sections.filter(s=>s.dept===d.id).length;
+    if(n)return toast(`"${dep.name}" still has ${n} section${n===1?'':'s'} — delete or reassign them first.`,'circle-alert');
+    confirmDlg('Delete department',`Remove department <b>${esc(dep.name)}</b>? This cannot be undone.`,'Delete',()=>{
+      DB.departments=DB.departments.filter(x=>x.id!==d.id);
+      if(FS.secDep===d.id)FS.secDep='all';
+      saveDB();render('sections');toast('Department deleted.','trash-2')})},
+
+  'emp-add':()=>{if(!needPerm('employees'))return;empModal(null)},
+  'emp-edit':d=>{if(!needPerm('employees'))return;empModal(d.id)},
+  'emp-del':d=>{if(!needPerm('employees'))return;
+    confirmDlg('Remove employee','This removes the employee and their evaluations from the program. Their buddy pairing will be ended. Reward history stays in the ledger.','Remove',
+    ()=>{DB.buddies.forEach(p=>{if(p.status==='active'&&p.empId===d.id)p.status='ended'});
+      DB.employees=DB.employees.filter(e=>e.id!==d.id);delete DB.evaluations[d.id];saveDB();render(CURRENT);toast('Employee removed.','trash-2')})},
+
+  'buddy-add':()=>{if(!needPerm('buddies'))return;buddyModal()},
+  'buddy-pair':d=>{if(!needPerm('buddies'))return;buddyPairModal(d.id)},
+  'buddy-del':d=>{if(!needPerm('buddies'))return;const b=budById(d.id);if(!b)return;
+    confirmDlg('Remove buddy',`Remove <b>${esc(b.name)}</b> from the buddy roster? Their active pairing (if any) will be ended and their credited points stay in the history ledger.`,'Remove',()=>{
+      DB.buddies.forEach(p=>{if(p.status==='active'&&p.buddyId===d.id)p.status='ended'});
+      DB.buddyPeople=DB.buddyPeople.filter(x=>x.id!==d.id);delete DB.buddyEvals[d.id];saveDB();render('buddies');toast('Buddy removed from roster.','trash-2')})},
+  'buddy-end':d=>{if(!needPerm('buddies'))return;
+    confirmDlg('End pairing','The pair will move to "Ended" but stays in the history. Points already credited to the buddy remain.','End pairing',()=>{
+    const p=DB.buddies.find(x=>x.id===d.id);if(!p)return;p.status='ended';saveDB();render(CURRENT);toast('Buddy pairing ended.','handshake');})},
+
+  'fac-add':d=>{
+    const stage=d.stage||'emp';
+    if(!needPerm('rf_'+stage))return;
+    facModal(stage,null)},
+  'fac-edit':d=>{
+    const stage=d.stage||'emp';
+    if(!needPerm('rf_'+stage))return;
+    if(!DB.factors[stage].find(x=>x.id===d.id))return;
+    facModal(stage,d.id)},
+  'fac-del':d=>{
+    const stage=d.stage||'emp';
+    if(!needPerm('rf_'+stage))return;
+    const f=DB.factors[stage].find(x=>x.id===d.id);if(!f)return;
+    confirmDlg('Delete factor',`Remove <b>${esc(f.title)}</b> from the ${STAGE_NAMES[stage]} review set? This cannot be undone.`,'Delete',()=>{
+      DB.factors[stage]=DB.factors[stage].filter(x=>x.id!==d.id);saveDB();render(CURRENT);toast('Factor deleted.','trash-2')})},
+
+  'award-open':()=>{if(!needPerm('award'))return;openModal({title:`Award ${esc(DB.settings.pointName)}`,body:`
+    <p class="t-dim" style="font-size:13px;margin-bottom:14px">All points awarded to an employee are <b>redirected to their assigned buddy</b> and count toward <b>every tier</b> (Bronze → Diamond).</p>
+    <div class="frow"><div><label class="lbl">Employee</label><select class="inp" id="a-emp">${empOpts()}</select></div>
+    <div><label class="lbl">Points</label><input class="inp" id="a-pts" type="number" min="5" max="500" value="50"></div></div>
+    <div><label class="lbl">Award type</label><select class="inp" id="a-type">
+      ${['Peer Nomination','Manager Award','Spot Bonus','Milestone','HR Recognition'].map(t=>`<option>${t}</option>`).join('')}</select></div>
+    <div style="margin-top:14px"><label class="lbl">Reason / note</label><textarea class="inp" id="a-note" placeholder="Why does this deserve recognition?"></textarea></div>`,
+    footer:`<button class="btn ghost" data-act="modal-close">Cancel</button><button class="btn brass" id="a-ok">${ic('award')}Award points</button>`})},
+
+  'ev-hr-ack':d=>{if(!needPerm('ev_hr'))return;
+    DB.evaluations[d.id]=DB.evaluations[d.id]||{};DB.evaluations[d.id].hr='acked';saveDB();render('ev_hr');
+    toast('Result acknowledged and counted for the cycle.','badge-check')},
+
+  'tier-add':()=>{if(!needPerm('tiers'))return;tierModal(null)},
+  'tier-edit':d=>{if(!needPerm('tiers'))return;tierModal(d.id)},
+  'tier-del':d=>{if(!needPerm('tiers'))return;
+    confirmDlg('Delete tier','Buddies who achieved this tier will fall back to their next achieved tier or none.','Delete',()=>{
+    DB.tiers=DB.tiers.filter(t=>t.id!==d.id);if(!DB.tiers.length)DB.tiers=defaultTiers();saveDB();render('tiers');toast('Tier deleted.','trash-2')})},
+
+  'sec-add':()=>{if(!needPerm('sections'))return;secModal(null)},
+  'sec-edit':d=>{if(!needPerm('sections'))return;secModal(d.id)},
+  'sec-del':d=>{if(!needPerm('sections'))return;
+    confirmDlg('Delete section','Employees and buddies must be reassigned — deletion fails if the section still has members.','Delete',()=>{
+    if(DB.employees.some(e=>e.section===d.id)||DB.buddyPeople.some(b=>b.section===d.id))return toast('Section still has employees or buddies — reassign them first.','circle-alert');
+    DB.sections=DB.sections.filter(s=>s.id!==d.id);saveDB();render('sections');toast('Section deleted.','trash-2')})},
+
+  'bk-export':()=>{
+    if(!needPerm('backup'))return;
+    DB.meta.lastBackup=today();saveDB();
+    const blob=new Blob([JSON.stringify(DB,null,2)],{type:'application/json'});
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+    a.download='buddy-rewards-backup-'+today()+'.json';a.click();
+    URL.revokeObjectURL(a.href);render('backup');toast('Backup exported (includes the company logo).','download');},
+  'bk-import':()=>{if(!needPerm('backup'))return;const f=$('#bk-file');if(f)f.click()},
+  'bk-reset':()=>{if(!needPerm('backup'))return;
+    confirmDlg('Reset all data','Every change will be discarded and the demo dataset restored. This cannot be undone.','Reset everything',()=>{
+    DB=seedDB();saveDB();buildSidebar();refreshBrandChrome();go(CURRENT);toast('Data reset to the demo seed.','rotate-ccw')})},
+
+  'user-add':()=>{if(!needPerm('users'))return;userModal(null)},
+  'user-edit':d=>{if(!needPerm('users'))return;userModal(d.id)},
+  'user-toggle':d=>{if(!needPerm('users'))return;const u=DB.users.find(x=>x.id===d.id);if(!u)return;
+    if(u.username===USER.username)return toast('You cannot disable your own account.','circle-alert');
+    u.active=!u.active;saveDB();render('users');toast(u.active?'User enabled.':'User disabled.','user-check')},
+  'user-del':d=>{if(!needPerm('users'))return;const u=DB.users.find(x=>x.id===d.id);if(!u)return;
+    if(u.username===USER.username)return toast('You cannot delete your own account.','circle-alert');
+    confirmDlg('Delete user',`Remove account <b>@${esc(u.username)}</b>? This cannot be undone.`,'Delete',()=>{
+      DB.users=DB.users.filter(x=>x.id!==d.id);saveDB();render('users');toast('User deleted.','trash-2')})},
+  'user-pw':d=>{if(!needPerm('users'))return;const u=DB.users.find(x=>x.id===d.id);if(!u)return;openModal({title:'Reset password',body:`
+    <p class="t-dim" style="margin-bottom:12px">Set a new password for <b>@${esc(u.username)}</b>.</p>
+    <input class="inp" id="npw" type="text" placeholder="New password (min 4 chars)">`,
+    footer:`<button class="btn ghost" data-act="modal-close">Cancel</button><button class="btn" id="npw-ok" data-id="${u.id}">Set password</button>`})},
+
+  'set-save':()=>{
+    if(!needPerm('settings'))return;
+    const org=$('#set-org').value.trim(),prog=$('#set-prog').value.trim();
+    if(!org||!prog)return toast('Organization and program names are required.','circle-alert');
+    DB.settings={orgName:org,programName:prog,pointName:$('#set-point').value.trim()||'Points',
+      period:$('#set-period').value.trim()||DB.settings.period,monthlyCap:+$('#set-cap').value||150,
+      logo:DB.settings.logo||'',glow:!!$('#set-glow').checked};
+    saveDB();
+    applyGlowTheme();
+    buildSidebar();
+    refreshBrandChrome();
+    toast('Settings saved.','check')},
+};
+
+document.addEventListener('click',e=>{
+  const el=e.target.closest('[data-act]');
+  if(el){const fn=ACTIONS[el.dataset.act];if(fn){try{fn(el.dataset,el,e)}catch(err){console.error('[BRS] action '+el.dataset.act,err);toast('Action failed: '+(err&&err.message?err.message:err),'circle-alert')}return}}
+  if(e.target.dataset&&e.target.dataset.ov)closeModal();
+});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
+
+document.addEventListener('click',e=>{
+  const evBtn=e.target.closest('#evm-save')||e.target.closest('#evm-submit');
+  if(evBtn){
+    const kind=evBtn.dataset.kind,id=evBtn.dataset.id,period=evBtn.dataset.period;
+    if(!hasPerm(evPermOf(kind)))return toast(`Permission required: ${PERM_LABEL[evPermOf(kind)]}.`,'lock');
+    const status=evBtn.id==='evm-submit'?'submitted':'draft';
+    const stage=stageOfKind(kind);
+    const store=storeFor(kind,id);
+    const prev=store.periods[period];
+    if(prev&&prev.status==='submitted')return toast(`Points already given for ${period} — Evaluation Done.`,'badge-check');
+    const sd=personServiceDays(kind,id), th=PERIOD_DAYS[period];
+    if(sd==null)return toast('Give Points locked — no service period on record.','lock');
+    if(!(sd>th))return toast(`Give Points locked — service must exceed ${th} days (currently ${sd}).`,'lock');
+    const factors=periodFactors(stage,period);
+    if(!factors.length)return toast(`No factors are assigned to "${period}" — add factors with this Evaluation Period first.`,'circle-alert');
+    const validIds=new Set(factors.map(f=>f.id));
+    const inputs=[...document.querySelectorAll('#modalRoot input[data-fid]')];
+    const points={}; let total=0;
+    for(const inp of inputs){
+      if(!validIds.has(inp.dataset.fid))continue;
+      const f=factors.find(x=>x.id===inp.dataset.fid);
+      const max=+inp.dataset.max||+f.maxPoints||0;
+      let v=Math.round(+inp.value||0);
+      if(v<0)v=0; if(v>max)v=max;
+      if(v!==0)points[f.id]=v;
+      total+=v;
+    }
+    if(status==='submitted'&&total<=0)return toast('Enter points for at least one factor before submitting.','circle-alert');
+    const cmtEl=$('#evm-cmt');
+    store.periods[period]={points,comment:cmtEl?cmtEl.value.trim():'',status,date:status==='submitted'?today():''};
+    let creditedName=null;
+    if(status==='submitted'&&total>0){
+      let buddyId=null;
+      if(kind==='buddy')buddyId=id;
+      else{const pr=activePairingOf(id);buddyId=pr?pr.buddyId:null;}
+      const buddy=buddyId?budById(buddyId):null;
+      if(buddy){
+        DB.history.push({id:uid(),empId:kind==='buddy'?(buddyAssigned(id)||{}).id||null:id,
+          buddyId:buddy.id,points:total,type:kind==='buddy'?'Buddy Evaluation Points':'Evaluation Points',
+          evalPeriod:period,
+          note:`${period} — ${STAGE_NAMES[stage]} evaluation${cmtEl&&cmtEl.value.trim()?': '+cmtEl.value.trim().slice(0,120):''}`,
+          by:USER.empId||null,date:today()});
+        creditedName=buddy.name;
+        const at=achievedTierOf(buddy.id);
+        toast(`Points given for ${period} — Evaluation Done (total ${total} / ${periodMax(stage,period)} pts) · redirected to buddy ${buddy.name}${at?` — tier achieved: ${at.name}!`:''}`,'badge-check');
+        saveDB();closeModal();
+        if(CURRENT==='evdetail')render('evdetail');else render(CURRENT);
+        return;
+      }
+    }
+    saveDB();closeModal();
+    if(CURRENT==='evdetail')render('evdetail');else render(CURRENT);
+    toast(status==='submitted'
+      ?`Points given for ${period} — Evaluation Done (total ${total} / ${periodMax(stage,period)} pts)${creditedName?'':' · kept on record (no buddy assigned)'}.`
+      :`Draft saved for ${period}.`,status==='submitted'?'badge-check':'save');
+    return;
+  }
+  if(e.target.closest('#tier-ok')||e.target.closest('#tier-ok2')){
+    if(!hasPerm('tiers'))return toast('Permission required: Tier Configuration.','lock');
+    const b=e.target.closest('[id^=tier-ok]'),id=b.dataset.id;
+    const name=$('#t-name').value.trim(),color=$('#t-color').value,
+      evalPeriod=$('#t-period').value,minPoints=+$('#t-min').value,perks=$('#t-perks').value.trim();
+    if(!name)return toast('Tier name is required.','circle-alert');
+    if(isNaN(minPoints)||minPoints<0)return toast('Minimum Points for Achievement must be 0 or more.','circle-alert');
+    if(!EVAL_PERIODS.includes(evalPeriod))return toast('Select an Eligible Evaluation Period.','circle-alert');
+    if(id){const t=DB.tiers.find(t=>t.id===id);
+      if(t)Object.assign(t,{name,color,evalPeriod,minPoints,perks});}
+    else DB.tiers.push({id:uid(),name,color,evalPeriod,minPoints,perks});
+    saveDB();closeModal();render('tiers');
+    toast(id?`Tier "${name}" updated.`:`Tier "${name}" added — ${minPoints}+ pts, eligible from ${evalPeriod}, all points count.`,id?'check':'layers');
+  }
+  if(e.target.closest('#fac-ok')){
+    const b=e.target.closest('#fac-ok');
+    const stage=b.dataset.stage||'emp', id=b.dataset.id;
+    if(!hasPerm('rf_'+stage))return toast(`Permission required: ${PERM_LABEL['rf_'+stage]}.`,'lock');
+    const title=$('#ff-title').value.trim(),desc=$('#ff-desc').value.trim(),
+      maxPoints=+$('#ff-max').value,evalPeriod=$('#ff-period').value;
+    if(!title)return toast('Factor title is required.','circle-alert');
+    if(!maxPoints||maxPoints<1||maxPoints>100000)return toast('Maximum Allocated Points must be between 1 and 100,000.','circle-alert');
+    if(!EVAL_PERIODS.includes(evalPeriod))return toast('Select an Evaluation Period.','circle-alert');
+    if(id){const f=DB.factors[stage].find(x=>x.id===id);
+      if(f){f.title=title;f.desc=desc;f.maxPoints=maxPoints;f.evalPeriod=evalPeriod;}}
+    else DB.factors[stage].push({id:uid(),title,desc,maxPoints,evalPeriod});
+    saveDB();closeModal();render(CURRENT);
+    toast(id?`Factor updated in the ${STAGE_NAMES[stage]} set.`:`Factor "${title}" added to the ${STAGE_NAMES[stage]} review set — up to ${maxPoints} pts, shown only on the ${evalPeriod.toLowerCase()} Give Points page.`,id?'check':'list-checks');
+  }
+  if(e.target.closest('#bb-ok')){
+    if(!hasPerm('buddies'))return toast('Permission required: Buddies.','lock');
+    const code=$('#bb-empno').value.trim(),name=$('#bb-name').value.trim(),
+      secId=$('#bb-sec').value,contact=$('#bb-contact').value.trim();
+    if(!code)return toast('EMP No is required.','circle-alert');
+    if([...DB.employees,...DB.buddyPeople].some(x=>x.code.toLowerCase()===code.toLowerCase()))return toast(`EMP No "${code}" already exists.`,'circle-alert');
+    if(!name)return toast('Full name is required.','circle-alert');
+    if(!secId)return toast('Select a section — the department is applied from it.','circle-alert');
+    if(!contact)return toast('Contact number is required.','circle-alert');
+    const sec=secById(secId);
+    DB.buddyPeople.push({id:uid(),code,name,section:secId,contact,added:today()});
+    saveDB();closeModal();render('buddies');
+    toast(`${name} added to the buddy roster — ${sec.name} · ${depName(sec.dept)}.`,'user-plus');
+  }
+  if(e.target.closest('#bp-ok')){
+    if(!hasPerm('buddies'))return toast('Permission required: Buddies.','lock');
+    const bid=e.target.closest('#bp-ok').dataset.id,empId=$('#bp-emp').value;
+    const b=budById(bid),em=empById(empId);
+    if(!b||!em)return toast('Select an employee.','circle-alert');
+    if(b.section!==em.section)return toast('Buddy and employee must be in the same section & department.','circle-alert');
+    if(activePairingOf(empId))return toast('That employee already has an active buddy.','circle-alert');
+    DB.buddies.push({id:uid(),empId,buddyId:bid,since:today(),status:'active'});
+    saveDB();closeModal();render('buddies');
+    toast(`${b.name} paired with ${em.name} — all of ${em.name.split(' ')[0]}'s points will redirect to ${b.name}.`,'handshake');
+  }
+  if(e.target.closest('#f-ok')){
+    if(!hasPerm('employees'))return toast('Permission required: Employees.','lock');
+    const id=e.target.closest('#f-ok').dataset.id;
+    const name=$('#f-name').value.trim(),code=$('#f-code').value.trim(),title=$('#f-title').value.trim(),email=$('#f-email').value.trim();
+    const sec=$('#f-sec').value,buddy=$('#f-buddy').value;
+    if(!name||!title)return toast('Name and job title are required.','circle-alert');
+    if(!sec)return toast('Select a section — create departments/sections in the Sections tab if needed.','circle-alert');
+    const bp=buddy?budById(buddy):null;
+    if(bp&&bp.section!==sec)return toast('Buddy must be from the same section & department as the employee.','circle-alert');
+    if(id){
+      const emp=empById(id);if(!emp)return;
+      Object.assign(emp,{name,code,title,email,section:sec,joinDate:$('#f-jd').value});
+      const pairing=activePairingOf(id);
+      if(buddy&&pairing&&pairing.buddyId!==buddy){pairing.buddyId=buddy;pairing.since=today();}
+      else if(buddy&&!pairing){DB.buddies.push({id:uid(),empId:id,buddyId:buddy,since:today(),status:'active'});}
+      else if(!buddy&&pairing){pairing.status='ended';}
+      saveDB();closeModal();render('employees');toast('Employee updated.','check');
+    }else{
+      const nid=uid();
+      DB.employees.push({id:nid,code:code||('EMP-'+(DB.employees.length+1)),name,section:sec,title,email,joinDate:$('#f-jd').value});
+      DB.evaluations[nid]={mgr:{periods:{}},hrEval:{periods:{}},hr:'pending'};
+      if(bp)DB.buddies.push({id:uid(),empId:nid,buddyId:buddy,since:today(),status:'active'});
+      saveDB();closeModal();render('employees');
+      toast(bp?`${name} added — buddy ${bp.name} assigned; all points will redirect to them.`:`${name} added to the program (no buddy yet — points will stay on their record).`,'user-check');
+    }
+  }
+  if(e.target.closest('#a-ok')){
+    if(!hasPerm('award'))return toast('Permission required: Award Points.','lock');
+    const empId=$('#a-emp').value,pts=+$('#a-pts').value,note=$('#a-note').value.trim();
+    if(!pts||pts<=0)return toast('Points must be a positive number.','circle-alert');
+    const e2=empById(empId);if(!e2)return toast('Select an employee.','circle-alert');
+    const pr=activePairingOf(empId);
+    const buddy=pr?budById(pr.buddyId):null;
+    DB.history.push({id:uid(),empId,buddyId:buddy?buddy.id:null,points:pts,type:$('#a-type').value,
+      note:(note||'—')+(buddy?` (redirected to buddy ${buddy.name})`:' (no buddy — kept by employee)'),
+      by:USER.empId||null,date:today()});
+    saveDB();closeModal();render(CURRENT);
+    burst(e.clientX-120,e.clientY);
+    if(buddy){
+      const at=achievedTierOf(buddy.id);
+      toast(`+${pts} ${DB.settings.pointName} to ${e2.name.split(' ')[0]} — redirected to buddy ${buddy.name}${at?` — tier achieved: ${at.name}!`:''}`,'award');
+    }else{
+      toast(`+${pts} ${DB.settings.pointName} awarded to ${e2.name.split(' ')[0]} — kept on their record (no buddy assigned).`,'award');
+    }
+  }
+  if(e.target.closest('#sec-ok')){
+    if(!hasPerm('sections'))return toast('Permission required: Sections & Departments.','lock');
+    const b=e.target.closest('#sec-ok'),id=b.dataset.id;
+    if(!DB.departments.length)return toast('Create a department first.','circle-alert');
+    const name=$('#s-name').value.trim();if(!name)return toast('Section name is required.','circle-alert');
+    const data={name,dept:$('#s-dep').value,lead:$('#s-lead').value,desc:$('#s-desc').value.trim()};
+    if(id){const s=DB.sections.find(s=>s.id===id);if(s)Object.assign(s,data)}
+    else DB.sections.push({id:uid(),...data});
+    saveDB();closeModal();render('sections');toast('Section saved.','building-2');
+  }
+  if(e.target.closest('#u-ok')){
+    if(!hasPerm('users'))return toast('Permission required: User Management.','lock');
+    const b=e.target.closest('#u-ok'),id=b.dataset.id;
+    const username=$('#u-user').value.trim().toLowerCase(),name=$('#u-name').value.trim(),
+      role=$('#u-role').value,pw=$('#u-pass').value.trim(),empId=$('#u-emp').value||null;
+    if(!username||!name)return toast('Username and name are required.','circle-alert');
+    if(!id&&DB.users.some(u=>u.username===username))return toast('That username already exists.','circle-alert');
+    const permissions=[...document.querySelectorAll('#modalRoot input[data-perm]:checked')].map(x=>x.dataset.perm);
+    if(id){const u=DB.users.find(x=>x.id===id);if(!u)return;
+      Object.assign(u,{username,name,role,empId,permissions:role==='Admin'?PERMS.map(p=>p.key):permissions});
+      if(pw)u.password=pw;
+      if(u.username===USER.username){USER=u;renderUserChip()}}
+    else DB.users.push({id:uid(),username,password:pw||'welcome1',name,role,active:true,empId,
+      permissions:role==='Admin'?PERMS.map(p=>p.key):permissions});
+    saveDB();closeModal();
+    buildSidebar();
+    if(CURRENT==='users')render('users');
+    toast(id?'User & permissions updated.':'User created with ticked permissions.','user-check');
+  }
+  if(e.target.closest('#npw-ok')){
+    if(!hasPerm('users'))return toast('Permission required: User Management.','lock');
+    const b=e.target.closest('#npw-ok'),u=DB.users.find(x=>x.id===b.dataset.id);
+    if(!u)return;
+    const v=$('#npw').value.trim();if(v.length<4)return toast('Password needs at least 4 characters.','circle-alert');
+    u.password=v;saveDB();closeModal();render('users');toast('Password updated for @'+u.username+'.','key-round');
+  }
+});
+document.addEventListener('change',e=>{
+  if(e.target.id==='logo-file'&&e.target.files[0]){
+    window.handleLogoFile(e.target.files[0]);
+    e.target.value='';
+  }
+  if(e.target.id==='bk-file'&&e.target.files[0]){
+    const r=new FileReader();
+    r.onload=()=>{try{const d=JSON.parse(r.result);
+      if(!d.employees||!d.users)throw new Error('missing sections');
+      DB=d;normalizeDB();saveDB();buildSidebar();refreshBrandChrome();go(CURRENT);toast('Backup imported successfully.','upload');
+    }catch(err){toast('That file is not a valid backup.','circle-alert')}};
+    r.readAsText(e.target.files[0]);
+  }
+});
+
+function secModal(id){
+  const s=id?DB.sections.find(x=>x.id===id)
+    :{name:'',lead:'',desc:'',dept:(FS.secDep!=='all'?FS.secDep:(DB.departments[0]||{}).id||'')};
+  openModal({title:id?'Edit section':'Add section',body:`
+    <div class="frow"><div><label class="lbl">Section name</label><input class="inp" id="s-name" value="${esc(s.name)}"></div>
+    <div><label class="lbl">Department</label><select class="inp" id="s-dep">${DB.departments.map(d=>`<option value="${d.id}" ${s.dept===d.id?'selected':''}>${esc(d.name)}</option>`).join('')}</select></div></div>
+    <div class="frow"><div><label class="lbl">Section lead</label><select class="inp" id="s-lead"><option value="">— none —</option>${empOpts(s.lead)}</select></div>
+    <div><label class="lbl">Description</label><input class="inp" id="s-desc" value="${esc(s.desc)}"></div></div>`,
+    footer:`<button class="btn ghost" data-act="modal-close">Cancel</button><button class="btn" id="sec-ok" data-id="${id||''}">Save section</button>`});
+}
+
+/* =========================================================
+   BOOT — login is wired FIRST and every step is guarded
+   ========================================================= */
+try{loadDB()}catch(err){console.error('[BRS] load failed — reseeding',err);DB=seedDB()}
+try{wireLogin()}catch(err){console.error('[BRS] login wiring failed',err)}
+try{
+  applyGlowTheme();
+  refreshBrandChrome();
+  const lg=$('#lg-rosette-lg');if(lg)lg.innerHTML=rosette(300,'#FFC82E','#10226B',true);
+}catch(err){console.error('[BRS] login chrome',err)}
+try{restoreSession()}catch(err){console.error('[BRS] session restore failed',err)}
+try{
+  const td=$('#tb-date');
+  if(td)td.textContent=new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+  tickClock();
+}catch(err){}
+refreshIcons();
+</script>
+</body>
+</html>
