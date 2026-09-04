@@ -1,4 +1,4 @@
-# Local editor and OS files
+# Local editor and operating-system files
 .vscode/
 .DS_Store
 Thumbs.db
@@ -8,8 +8,9 @@ Thumbs.db
 .env.*
 !.env.example
 
-# Backup and old project folders
+# Local backup and old project folders
 Buddy System/
 New folder/
 New folder (2)/
+New folder (3)/
 Past/
