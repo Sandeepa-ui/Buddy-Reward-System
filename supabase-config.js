@@ -7,6 +7,6 @@
  * Never put a service_role or secret key in this file.
  */
 window.BRS_SUPABASE_CONFIG = {
-  url: 'https://obombbczjzajxdjkzzqo.supabase.co',
-  anonKey: 'sb_publishable_qtB1nxl0XBQCzgI2Y8ktTg_fSW8jzhv'
+  url: 'https://khrrjrhwvvbqpqddxzai.supabase.co',
+  anonKey: 'sb_publishable_JI74HDdtyMmd5he89jpyMw_UDEhaL8o'
 };
