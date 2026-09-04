@@ -7,3 +7,9 @@ Thumbs.db
 .env
 .env.*
 !.env.example
+
+# Backup and old project folders
+Buddy System/
+New folder/
+New folder (2)/
+Past/

@@ -1,9 +1,12 @@
-// Browser configuration for the shared_app_state compatibility bridge.
-// Set these values from Supabase: Project Settings > API.
-// The publishable/anon key is intended for browser use. Never put a service
-// role key or another secret in this file. Leave both values empty to use
-// browser localStorage without cloud synchronization.
-window.SUPABASE_CONFIG = {
-    url: 'https://juicfuknxiuadnranhhc.supabase.co',
-    anonKey: 'sb_publishable_XHY0GTJscj45vdKveyEcBw_SN7d-UuQ'
+/*
+ * Supabase browser configuration.
+ * Paste the Project URL and the publishable/anon key from:
+ * Supabase Dashboard -> Project Settings -> API.
+ *
+ * This file is safe to commit only when it contains the publishable/anon key.
+ * Never put a service_role or secret key in this file.
+ */
+window.BRS_SUPABASE_CONFIG = {
+  url: 'https://obombbczjzajxdjkzzqo.supabase.co',
+  anonKey: 'sb_publishable_qtB1nxl0XBQCzgI2Y8ktTg_fSW8jzhv'
 };
