@@ -903,7 +903,8 @@ function loadDB(){
     if(raw){DB=JSON.parse(raw);normalizeDB();return}
   }catch(e){console.error('[BRS] stored data unreadable — reseeding',e)}
   DB=seedDB();
-  try{saveDB()}catch(e){console.error('[BRS] could not persist seed',e)}
+  // The initial seed is kept in memory until the remote state has been read.
+  // Uploading it here races remoteLoadDB() and can overwrite shared data.
 }
 let SUPABASE_CLIENT=null;
 function getSupabaseClient(){
@@ -3321,8 +3322,17 @@ try{
 }catch(err){console.error('[BRS] login chrome',err)}
 try{
   const remote=getSupabaseClient();
-  if(remote)remoteLoadDB().catch(err=>console.error('[BRS] Supabase load failed',err)).finally(()=>restoreSession());
-  else restoreSession();
+  if(remote){
+    remoteLoadDB()
+      .catch(err=>{
+        console.error('[BRS] Supabase load failed',err);
+        toast('Online data could not be loaded. Using this browser\'s cached data.','cloud-off');
+      })
+      .finally(()=>{
+        refreshBrandChrome();
+        restoreSession();
+      });
+  }else restoreSession();
 }catch(err){console.error('[BRS] session restore failed',err);restoreSession()}
 try{
   const td=$('#tb-date');
